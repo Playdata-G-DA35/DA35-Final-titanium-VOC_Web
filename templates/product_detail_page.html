@@ -1,0 +1,662 @@
+{% extends 'navi.html' %}
+
+{% load static %}
+
+{% block title %}상품 상세페이지{% endblock %}
+
+{% block content %}
+<div class="product-detail">
+    <h1 class="product-title">상품 상세페이지</h1>
+    
+    <form method="post" id="productForm" class="rounded-rectangle">
+        {% csrf_token %}
+        <div class="filter-container">
+            <div class="filter-cell">
+                <label for="category">상위 카테고리:</label>
+                <select id="category" name="category">
+                    <option value="">Category 선택</option>
+                </select>
+            </div>
+            <div class="filter-cell">
+                <label for="subcategory">하위 카테고리:</label>
+                <select id="subcategory" name="subcategory" disabled>
+                    <option value="">Subcategory 선택</option>
+                </select>
+            </div>
+            <div class="filter-cell">
+                <label for="product">상품명:</label>
+                <select id="product" name="product" disabled>
+                    <option value="">Product 선택</option>
+                </select>
+            </div>
+            <div class="filter-cell">
+                <button type="submit">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <div id="result" class="rounded-rectangle">
+        <h2>데이터</h2>
+        <div class="product-details">
+            <div class="product-image">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23CCCCCC'/%3E%3Ctext x='50%25' y='50%25' font-size='18' text-anchor='middle' alignment-baseline='middle' font-family='Arial, sans-serif' fill='%23666666'%3E이미지%3C/text%3E%3C/svg%3E" alt="Product Image">
+            </div>
+            <div class="product-info">
+                <!-- AJAX 요청 후 결과가 여기에 표시됩니다. -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 새로운 상품 상세 분석 섹션 -->
+    <div id="product-analysis" class="rounded-rectangle">
+        <h2>상품별 조회수 분석</h2>
+        <div class="analysis-charts">
+            <div class="chart-container bar-chart">
+                <canvas id="ageGroupChart"></canvas>
+            </div>
+            <div class="chart-container pie-chart">
+                <canvas id="genderChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 새로운 상품 구매 분석 섹션 -->
+    <div id="purchase-analysis" class="rounded-rectangle">
+        <h2>상품별 구매수 분석</h2>
+        <div class="analysis-charts">
+            <div class="chart-container bar-chart">
+                <canvas id="ageGroupPurchaseChart"></canvas>
+            </div>
+            <div class="chart-container pie-chart">
+                <canvas id="genderPurchaseChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 새로운 리뷰 분석 섹션 -->
+    <div id="review-analysis" class="rounded-rectangle">
+        <h2>상품별 리뷰량 분석</h2>
+        <div class="filter-container">
+            <div class="filter-cell">
+                <label for="chartType">차트 타입:</label>
+                <select id="chartType" name="chartType">
+                    <option value="daily">일별</option>
+                    <option value="weekly">주별</option>
+                    <option value="monthly">월별</option>
+                </select>
+            </div>
+            <div class="filter-cell">
+                <button id="reviewFilterButton">적용</button>
+            </div>
+        </div>
+        <div class="analysis-charts">
+            <div class="chart-container bar-chart">
+                <canvas id="reviewChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 새로운 토픽 분석 섹션 (방사형 차트와 긍부정 파이차트) -->
+    <div id="topic-analysis" class="rounded-rectangle">
+        <h2>상품별 토픽 및 감정 분석</h2>
+        <div class="analysis-charts">
+            <div class="chart-container radar-chart">
+                <canvas id="topicRadarChart"></canvas>
+            </div>
+            <div class="chart-container pie-chart">
+                <canvas id="sentimentPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const data = {
+        "바지": {
+            "슈트 팬츠/슬랙스": ["[쿨탠다드] 세미 와이드 히든 밴딩 슬랙스 [블랙]", "[쿨탠다드] 와이드 히든 밴딩 슬랙스 [블랙]", "세미 와이드 히든 밴딩 슬랙스 [블랙]", "와이드 히든 밴딩 슬랙스 [미디엄 그레이]", "와이드 히든 밴딩 슬랙스 [블랙]", "테이퍼드 히든 밴딩 크롭 슬랙스 [블랙]"],
+            "기타 바지": ["라운지 스웨트 팬츠 [블랙]", "레플리카 퍼티그 팬츠 [카키]"],
+            "데님 팬츠": ["스트레이트 데님 팬츠 [라이트 인디고]", "스트레이트 데님 팬츠 [크림]"]
+        },
+        "상의": {
+            "민소매/반소매/카라 티셔츠": ["[쿨탠다드] 릴렉스 핏 크루 넥 반팔 티셔츠 2팩", "레이어드 크루 넥 반팔 티셔츠_긴 기장 [화이트]", "레이어드 크루 넥 반팔 티셔츠_일반 기장 2팩", "레이어드 크루 넥 반팔 티셔츠_일반 기장 [화이트]", "릴렉스 핏 크루 넥 반팔 티셔츠 2팩", "릴렉스 핏 크루 넥 반팔 티셔츠 [블랙]", "릴렉스 핏 크루 넥 반팔 티셔츠 [화이트]", "베이식 크루 넥 반팔 티셔츠 2팩"],
+            "긴소매 티셔츠": ["베이식 긴팔 티셔츠 2팩"],
+            "맨투맨/니트/스웨트": ["스웨트셔츠 [블랙]"]
+        },
+        "아우터": {
+            "숏패딩/헤비 아우터": ["다운 푸퍼 숏 패딩 재킷 [블랙]", "데일리 푸퍼 숏 패딩 재킷 [블랙]"],
+            "슈트/ 블레이저 재킷": ["릴렉스드 베이식 블레이저 [미디엄 그레이]", "릴렉스드 베이식 블레이저 [블랙]", "베이식 블레이저 [블랙]", "오버사이즈 블레이저 [블랙]"],
+            "겨울 코트": ["캐시미어 블렌드 맥시 발마칸 코트 [블랙]", "캐시미어 블렌드 오버사이즈 발마칸 코트 [블랙]", "캐시미어 블렌드 오버사이즈 싱글 코트 [블랙]"],
+            "후드 집업": ["후디드 스웨트 집업 [멜란지 그레이]"]
+        }
+    };
+
+    const categorySelect = document.getElementById('category');
+    for (let category in data) {
+        categorySelect.innerHTML += `<option value="${category}">${category}</option>`;
+    }
+
+    categorySelect.addEventListener('change', function() {
+        const selectedCategory = this.value;
+        const subcategorySelect = document.getElementById('subcategory');
+        const productSelect = document.getElementById('product');
+        
+        subcategorySelect.innerHTML = '<option value="">Subcategory 선택</option>';
+        subcategorySelect.disabled = false;
+        productSelect.innerHTML = '<option value="">Product 선택</option>';
+        productSelect.disabled = true;
+
+        if (selectedCategory) {
+            const subcategories = Object.keys(data[selectedCategory]);
+            for (let sub of subcategories) {
+                subcategorySelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+            }
+        }
+    });
+
+    document.getElementById('subcategory').addEventListener('change', function() {
+        const selectedCategory = document.getElementById('category').value;
+        const selectedSubcategory = this.value;
+        const productSelect = document.getElementById('product');
+        
+        productSelect.innerHTML = '<option value="">Product 선택</option>';
+        productSelect.disabled = false;
+
+        if (selectedSubcategory) {
+            const products = data[selectedCategory][selectedSubcategory];
+            for (let product of products) {
+                productSelect.innerHTML += `<option value="${product}">${product}</option>`;
+            }
+        }
+    });
+
+    let ageGroupChart, genderChart, ageGroupPurchaseChart, genderPurchaseChart, reviewChart, topicRadarChart, sentimentPieChart;
+
+    document.getElementById('productForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const product = document.getElementById('product').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // 제품 상세 정보 요청
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ product: product }),
+        })
+        .then(response => response.json())
+        .then(result => {
+            const resultDiv = document.getElementById('result');
+            const productInfoDiv = resultDiv.querySelector('.product-info');
+            if (Array.isArray(result) && result.length > 0) {
+                const item = result[0];
+                productInfoDiv.innerHTML = `
+                    <h3>${item.product}</h3>
+                    <p><strong>Category:</strong> ${item.category}</p>
+                    <p><strong>Subcategory:</strong> ${item.subcategory}</p>
+                    <p><strong>Likes:</strong> ${item.product_like}</p>
+                    <p><strong>Price:</strong> ${item.product_price}원</p>
+                    <p><strong>Average Grade:</strong> ${item.average_grade.toFixed(2)}</p>
+                `;
+            } else if (result.error) {
+                productInfoDiv.innerHTML = `<p class="error">Error: ${result.error}</p>`;
+            } else {
+                productInfoDiv.innerHTML = '<p>No data found</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('result').querySelector('.product-info').innerHTML = '<p class="error">An error occurred while processing your request.</p>';
+        });
+
+        // 상품 상세 분석 요청
+        fetch('/product_detail/product_details_analysis/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ product: product }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (ageGroupChart) ageGroupChart.destroy();
+            if (genderChart) genderChart.destroy();
+            createCharts(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('product-analysis').innerHTML += '<p class="error">Failed to load analysis data.</p>';
+        });
+
+        // 상품 구매 분석 요청
+        fetch('/product_detail/product_details_analysis_purchases/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ product: product }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (ageGroupPurchaseChart) ageGroupPurchaseChart.destroy();
+            if (genderPurchaseChart) genderPurchaseChart.destroy();
+            createPurchaseCharts(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('purchase-analysis').innerHTML += '<p class="error">Failed to load purchase analysis data.</p>';
+        });
+
+        // 토픽 분석 요청 (방사형 차트)
+        fetch('/product_detail/product_topic_analysis_radial/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ product: product }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (topicRadarChart) topicRadarChart.destroy();
+            createTopicRadarChart(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('topic-analysis').innerHTML += '<p class="error">Failed to load topic analysis data.</p>';
+        });
+
+        // 감정 분석 요청 (긍부정 파이차트)
+        fetch('/product_detail/product_sentiment_analysis/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ product: product }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (sentimentPieChart) sentimentPieChart.destroy();
+            createSentimentPieChart(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('topic-analysis').innerHTML += '<p class="error">Failed to load sentiment analysis data.</p>';
+        });
+
+        function createCharts(data) {
+            const ctxAgeGroup = document.getElementById('ageGroupChart').getContext('2d');
+            ageGroupChart = new Chart(ctxAgeGroup, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.age_groups),
+                    datasets: [{
+                        label: '연령대별 조회수',
+                        data: Object.values(data.age_groups),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            const ctxGender = document.getElementById('genderChart').getContext('2d');
+            genderChart = new Chart(ctxGender, {
+                type: 'pie',
+                data: {
+                    labels: ['남성', '여성'],
+                    datasets: [{
+                        data: [data.gender_views.male_ratio, data.gender_views.female_ratio],
+                        backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: '성별 조회 비율'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPurchaseCharts(data) {
+            const ctxAgeGroupPurchase = document.getElementById('ageGroupPurchaseChart').getContext('2d');
+            ageGroupPurchaseChart = new Chart(ctxAgeGroupPurchase, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.age_groups),
+                    datasets: [{
+                        label: '연령대별 구매수',
+                        data: Object.values(data.age_groups),
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            const ctxGenderPurchase = document.getElementById('genderPurchaseChart').getContext('2d');
+            genderPurchaseChart = new Chart(ctxGenderPurchase, {
+                type: 'pie',
+                data: {
+                    labels: ['남성', '여성'],
+                    datasets: [{
+                        data: [data.gender_purchases.male_ratio, data.gender_purchases.female_ratio],
+                        backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 99, 132, 0.6)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: '성별 구매 비율'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTopicRadarChart(data) {
+            const topics = ["사이즈", "재질", "디자인", "만족도", "두께감"];
+            const scores = topics.map(topic => data.topic_averages[topic] || 0);
+
+            const ctxTopicRadar = document.getElementById('topicRadarChart').getContext('2d');
+
+            if (topicRadarChart) {
+                topicRadarChart.destroy();
+            }
+
+            topicRadarChart = new Chart(ctxTopicRadar, {
+                type: 'radar',
+                data: {
+                    labels: topics,
+                    datasets: [{
+                        label: '상품 토픽 분석',
+                        data: scores,
+                        backgroundColor: 'rgba(0, 100, 255, 0.3)',
+                        borderColor: 'rgba(0, 100, 255, 0.6)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function createSentimentPieChart(data) {
+            const ctxSentimentPie = document.getElementById('sentimentPieChart').getContext('2d');
+
+            if (sentimentPieChart) {
+                sentimentPieChart.destroy();
+            }
+
+            sentimentPieChart = new Chart(ctxSentimentPie, {
+                type: 'pie',
+                data: {
+                    labels: ['긍정', '부정'],
+                    datasets: [{
+                        data: [data.positive_count, data.negative_count],
+                        backgroundColor: ['#4CAF50', '#F44336']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: '긍/부정 비율'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (context.parsed !== null) {
+                                        label += ': ' + context.parsed.toFixed(2) + ' (' + (context.parsed / (data.positive_count + data.negative_count) * 100).toFixed(2) + '%)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    // 새로운 리뷰 분석 요청
+    document.getElementById('reviewFilterButton').addEventListener('click', function(event) {
+        event.preventDefault();
+
+        const product = document.getElementById('product').value;
+        const chartType = document.getElementById('chartType').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // 리뷰 분석 데이터 요청
+        fetch('/product_detail/review_count/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ product: product, chart_type: chartType }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (reviewChart) reviewChart.destroy();
+            createReviewChart(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('review-analysis').innerHTML += '<p class="error">Failed to load review analysis data.</p>';
+        });
+
+        function createReviewChart(data) {
+            const ctxReview = document.getElementById('reviewChart').getContext('2d');
+            reviewChart = new Chart(ctxReview, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item.period),
+                    datasets: [{
+                        label: '리뷰 수',
+                        data: data.map(item => item.review_count),
+                        backgroundColor: 'rgba(255, 159, 64, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
+
+<style>
+    body {
+        background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .product-detail {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .product-title {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .rounded-rectangle {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .filter-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 10px;
+    }
+    .filter-cell {
+        flex: 1 1 200px;
+        display: flex;
+        flex-direction: column;
+    }
+    label {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    select, button {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    .product-details {
+        display: flex;
+        gap: 20px;
+    }
+    .product-image {
+        flex: 0 0 200px;
+    }
+    .product-image img {
+        width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .product-info {
+        flex: 1;
+    }
+    .error {
+        color: red;
+        font-weight: bold;
+    }
+    .analysis-charts {
+        display: flex;
+        justify-content: space-between;
+        height: 400px;
+        margin-top: 20px;
+    }
+
+    .chart-container {
+        height: 100%;
+    }
+
+    .bar-chart {
+        width: 70%;
+    }
+
+    .pie-chart, .radar-chart {
+        width: 48%;
+    }
+
+    @media (min-width: 768px) {
+        .product-detail {
+            padding: 20px 5%;
+        }
+        .filter-container {
+            flex-wrap: nowrap;
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .product-detail {
+            padding: 20px 10%;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .product-details {
+            flex-direction: column;
+        }
+        .product-image {
+            flex: 0 0 auto;
+            text-align: center;
+        }
+        .analysis-charts {
+            flex-direction: column;
+        }
+        .chart-container {
+            width: 100%;
+            margin-bottom: 20px;
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'navi.html' %}
+
+{% block title %}무신사 인사이트{% endblock %}
+
+{% block content %}
+{% load static %}
+
+<div class="flex flex-col min-h-screen">
+    <div class="container mx-auto flex flex-1 overflow-hidden">
+        <main class="bg-gray-0 flex-1 p-8 space-y-8 overflow-auto">
+            <!-- 메인 리포트 -->
+            <section class="flex flex-col space-y-4">
+                <h2 class="font-bold bg-gray-300 p-2 text-left text-2xl box2">메인 리포트</h2>
+                <div class="flex space-x-4">
+                    <div class="flex-1 bg-gray-100 p-4 rounded-lg overflow-auto ">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-3xl">브랜드 선호도</h3>
+                            <p class="font-bold bg-gray-200 p-2 text-right text-lg box">전일 기준</p>
+                        </div>
+                        <div class="mt-2 flex items-center">
+                            <img src="{% static 'image/mu_logo.png' %}" alt="musinsa standard" style="width:120px;height:100;">
+                            <span class="ml-auto text-5xl whitespace-nowrap">78.3만</span>
+                            <img src="{% static 'image/like_logo.png' %}" class="ml-2" alt="like_logo" style="width:50px;height:auto;">
+                        </div>
+                    </div>
+                    <div class="flex-1 bg-gray-100 p-4 rounded-lg overflow-auto">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-3xl">SPA 업종 브랜드 선호도</h3>
+                            <p class="font-bold bg-gray-200 p-2 text-right text-lg box">전일 기준</p>
+                        </div>
+                        <div class="mt-2 flex items-center">
+                            <img src="{% static 'image/82_logo.png' %}" alt="spao" style="width:80px;">
+                            <img src="{% static 'image/topten_logo.png' %}" alt="spao" style="width:80px;">
+                            <img src="{% static 'image/spao_logo.png' %}" alt="spao" style="width:80px;">
+                            <span class="ml-auto text-5xl whitespace-nowrap">30.4만</span>
+                            <img src="{% static 'image/like_logo.png' %}" class="ml-2" alt="like_logo" style="width:50px;height:auto;">
+                        </div> 
+                    </div>
+                </div>
+            </section>
+
+            <!--  상품 랭킹 정보 -->
+            <section>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h2 class="text-xl font-bold">브랜드 내 상품 랭킹 정보</h2>
+                    <div class="flex space-x-2 mt-4 overflow-x-auto">
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">1위</p>
+                            <img src="{% static 'image/musinsa_rank_image_1.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">레이어드 슬리브리스 탑_일반 기장</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">2위</p>
+                            <img src="{% static 'image/musinsa_rank_image_2.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">라이트웨이트 크루 삭스 7팩</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">3위</p>
+                            <img src="{% static 'image/musinsa_rank_image_3.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">레이어드 슬리브리스 탑_일반 기장</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">4위</p>
+                            <img src="{% static 'image/musinsa_rank_image_4.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">릴렉스 핏 크루 넥 반팔 티셔츠 2</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">5위</p>
+                            <img src="{% static 'image/musinsa_rank_image_5.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">라이트웨이트 미들 삭스 7팩</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">6위</p>
+                            <img src="{% static 'image/musinsa_rank_image_6.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">릴렉스 핏 크루 넥 반팔 티셔츠 2팩</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">7위</p>
+                            <img src="{% static 'image/musinsa_rank_image_7.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">릴렉스 핏 크루 넥 반팔 티셔츠 2팩</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">8위</p>
+                            <img src="{% static 'image/musinsa_rank_image_8.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">[쿨탠다드] 맨즈 드로즈 3팩</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">9위</p>
+                            <img src="{% static 'image/musinsa_rank_image_9.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">릴렉스드 테이퍼드 히든 밴딩 크롭 슬랙스</p>
+                        </div>
+                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
+                            <p class="text-left font-bold">10위</p>
+                            <img src="{% static 'image/musinsa_rank_image_10.jpg' %}" alt="상품 이미지" class="product-image">
+                            <p class="product-name">레플리카 퍼티그 팬츠</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 브랜드 인기 연령대 및 성별 -->
+            <section>
+                <div class="flex flex-col space-y-4">
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h2 class="text-xl font-bold">브랜드 인기 연령대 및 성별</h2>
+                        <div class="grid grid-cols-1 gap-4 mt-4">
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h3 class="font-bold">24-28세, 남성에게 인기 많은 상품</h3>
+                                <div class="mt-2 flex space-x-4 overflow-auto">
+                                    <img src="{% static 'image/mu_bar.png' %}" alt="연령대 및 성별 그래프" style="width: 800px; height: auto;">
+                                    <img src="{% static 'image/mu_py.png' %}" alt="연령대 및 성별 그래프" style="width: 510px; height: auto;">
+                                </div>
+                            </div>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h4 class="font-bold">40세이상, 남성에게 인기 많은 상품</h4>
+                                <div class="mt-2 flex space-x-4 overflow-auto">
+                                    <img src="{% static 'image/all_spa_bar.png' %}" alt="연령대 및 성별 그래프" style="width: 800px; height: auto;">
+                                    <img src="{% static 'image/all_spa_py.png' %}" alt="연령대 및 성별 그래프" style="width: 510px; height: auto;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

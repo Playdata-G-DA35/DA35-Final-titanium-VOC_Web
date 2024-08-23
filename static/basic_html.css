@@ -1,0 +1,328 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+form, .block {
+    margin: 20px;
+}
+
+label {
+    margin-right: 10px;
+}
+
+input[type="month"], select {
+    margin-bottom: 10px;
+    padding: 5px;
+    font-size: 16px;
+}
+
+button {
+    
+    font-size: 16px;
+    cursor: pointer;
+   
+}
+
+h2, h3 {
+    margin-bottom: 20px;
+}
+
+h1 {
+    margin-bottom: 30px;
+}
+
+.block {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+
+
+.chart-type-buttons button {
+    margin-right: auto;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.wordcloud-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wordcloud-block {
+    width: 45%;
+    text-align: center;
+    position: relative;
+}
+
+.wordcloud-block h3 {
+    margin-bottom: 10px;
+}
+
+.navigation-button {
+    font-size: 24px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.navigation-button.left {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.navigation-button.right {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.price-range-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.price-range-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: 20px;
+}
+
+.price-range-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    width: 150px;
+}
+
+.price-range-label {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+#wordFrequencyTables {
+    flex: 1;
+    max-width: 80%;
+}
+
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* 요소 간의 간격 */
+    align-items: center;
+    margin: 20px;
+}
+
+.form-container label {
+    margin-right: 10px;
+}
+
+label {
+    white-space: nowrap;
+}
+
+.form-container input, .form-container select {
+    margin-bottom: 5px;
+    padding: 1px;
+    font-size: 16px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+}
+
+.form-container button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.form-container button:hover {
+    background-color: #0056b3;
+}
+
+.form-group {
+    display: flex;
+    gap: 10px;
+    margin: 0; /* 기본 마진 제거 */
+    margin-left: auto;
+}
+
+
+.card {
+    width: 100%; /* 카드를 화면 너비에 맞추기 */
+    max-width: 1400px; /* 최대 너비 설정 */
+    margin: auto; /* 화면 중앙에 정렬 */
+    margin-bottom: 20px;
+}
+
+.charts-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px; /* 차트 간의 간격 */
+}
+
+.legend {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.legend-color-box {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+.chart-container {
+    display: flex;
+    justify-content: space-between; /* 좌우 간격을 조절합니다 */
+    align-items: center; /* 수직 중앙 정렬 */
+}
+
+.chart-type-selector {
+    margin-left: auto; /* 오른쪽으로 이동 */
+}
+
+#chart_type {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+.header-container {
+    display: flex;
+    justify-content: space-between; /* 헤더와 폼 사이의 간격을 최대화 */
+    align-items: center; /* 수직 중앙 정렬 */
+}
+
+.header-container h1 {
+    margin: 0; /* 기본 마진 제거 */
+}
+
+.form-group select, .form-group input {
+    margin-top: 1px; /* 레이블과 입력 요소 사이의 간격 */
+}
+
+.active {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.active:hover {
+    background-color: #0056b3;
+}
+
+/* 테이블 기본 스타일 */
+#wordFrequencyTables {
+    width: 100%; /* 테이블이 부모 컨테이너의 전체 너비를 차지하도록 설정 */
+    border-collapse: collapse; /* 셀 경계가 서로 겹치지 않도록 설정 */
+    margin-bottom: 20px; /* 테이블 아래에 여백 추가 */
+}
+
+/* 테이블 헤더 스타일 */
+#wordFrequencyTables th {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); /* 그라데이션 배경색 */
+    color: #fff; /* 헤더 텍스트 색상 */
+    padding: 12px 15px; /* 헤더 셀의 패딩 */
+    text-align: center; /* 헤더 텍스트 가운데 정렬 */
+    border-bottom: 3px solid #0056b3; /* 헤더 셀 하단에 경계선 추가 */
+    font-weight: bold; /* 헤더 텍스트 두껍게 */
+}
+
+/* 테이블 데이터 셀 스타일 */
+#wordFrequencyTables td {
+    padding: 10px 15px; /* 데이터 셀의 패딩 */
+    border-bottom: 1px solid #dee2e6; /* 데이터 셀 하단에 경계선 추가 */
+    text-align: center; /* 데이터 텍스트 중앙 정렬 */
+}
+
+/* 테이블 행의 배경색 변경 */
+#wordFrequencyTables tr:nth-child(even) {
+    background-color: #f9f9f9; /* 짝수 행 배경색 */
+}
+
+#wordFrequencyTables tr:hover {
+    background-color: #e9ecef; /* 마우스 오버 시 배경색 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 마우스 오버 시 그림자 효과 */
+}
+
+/* 가격대 버튼 컨테이너 스타일 */
+.price-range-buttons {
+    display: flex; /* 버튼들을 가로로 배치 */
+    align-items: center; /* 세로 가운데 정렬 */
+    gap: 10px; /* 버튼 사이 간격 */
+    margin-top: 20px; /* 위쪽 여백 */
+}
+
+/* 가격대 레이블 스타일 */
+.price-range-label {
+    font-weight: bold; /* 글씨 두껍게 */
+    color: #333; /* 텍스트 색상 */
+    margin-right: 10px; /* 오른쪽 여백 */
+}
+
+/* 가격대 버튼 스타일 */
+.price-range-buttons button {
+    background-color: #007bff; /* 배경색 */
+    color: #fff; /* 텍스트 색상 */
+    border: none; /* 테두리 제거 */
+    border-radius: 5px; /* 모서리 둥글게 */
+    padding: 10px 20px; /* 패딩 추가 */
+    font-size: 14px; /* 폰트 크기 */
+    cursor: pointer; /* 클릭 커서 */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* 전환 효과 */
+}
+
+.price-range-buttons button:hover {
+    background-color: #0056b3; /* 마우스 오버 시 배경색 */
+    transform: scale(1.05); /* 마우스 오버 시 살짝 확대 */
+}
+
+.price-range-buttons button:focus {
+    outline: 2px solid #0056b3; /* 포커스 시 테두리 색상 */
+    outline-offset: 2px; /* 포커스 테두리의 간격 */
+}

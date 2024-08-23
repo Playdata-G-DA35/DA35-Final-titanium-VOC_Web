@@ -1,0 +1,692 @@
+{% extends 'navi.html' %}
+
+{% block title %}리뷰 감정분석{% endblock %}
+
+{% block content %}
+{% load static %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="{% static 'basic_html.css' %}">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .container {
+        margin: 20px;
+    }
+    h1, h2 {
+        margin-bottom: 20px;
+    }
+    .block {
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin-top: 20px;
+        position: relative;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background-color: #f4f4f4;
+        white-space: nowrap; 
+    }
+    .emotions-buttons {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+    .emotions-buttons button {
+        margin-left: 10px;
+    }
+    .form-horizontal {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem; /* 요소들 간의 간격을 조정합니다. */
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-right: 1rem; /* 폼 그룹 간의 간격을 조정합니다. */
+    }
+    label {
+        white-space: nowrap;
+    }
+    .form-group label {
+        margin-bottom: 0.5rem; /* 라벨과 입력 필드 간의 간격을 조정합니다. */
+    }
+    button {
+        align-self: flex-end; /* 버튼을 폼의 끝으로 정렬합니다. */
+        margin-top: 0rem; /* 버튼 위쪽 간격을 조정합니다. */
+    }
+    .card {
+        width: 100%; /* 카드를 화면 너비에 맞추기 */
+        max-width: 1400px; /* 최대 너비 설정 */
+        margin: auto; /* 화면 중앙에 정렬 */
+        margin-bottom: 20px;
+    }
+    .form-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px; /* 요소 간의 간격 */
+        align-items: center;
+        margin: 20px;
+    }
+    .form-container label {
+        margin-right: 10px;
+    }
+    .form-container input, .form-container select {
+        margin-bottom: 1px;
+        padding: 8px;
+        font-size: 16px;
+        border: 1px solid #000000;
+        border-radius: 4px;
+    }
+    .form-container button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: white;
+        transition: background-color 0.3s ease;
+    }
+    .form-container button:hover {
+        background-color: #0056b3;
+    }
+    .form-group {
+        display: flex;
+        gap: 10px;
+        margin: 0; /* 기본 마진 제거 */
+        margin-left: auto;
+    }
+    .box2 {    
+        border-radius: 0.5rem; /* 네모칸의 모서리 둥글게 */
+        width: 9.5rem; /* 네모칸의 너비 */
+        white-space: nowrap;
+    } 
+    .container {
+        margin: 20px;
+    }
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+    .chart-container {
+        display: flex;
+        justify-content: space-between; /* 두 개의 차트가 컨테이너의 양쪽에 정렬되도록 설정합니다. */
+    }
+
+    .chart-wrapper {
+        flex: 1; /* 각 차트가 컨테이너의 절반을 차지하도록 설정합니다. */
+        margin: 0 10px; /* 양쪽에 10px의 마진을 추가하여 차트 간의 거리를 줄입니다. */
+    }
+</style>
+</head>
+<body>
+    <h1 class="font-bold bg-gray-300 p-2 text-left text-2xl box2">리뷰감정분석</h1>
+    <section class="card bg-white shadow-md rounded-md p-2 mb-2 w-80">
+        <div class="form-container header-container">
+            <form id="filterForm" class="form-horizontal">
+                <!-- Start Period -->
+                <div class="flex items-center space-x-4 mb-2">
+                    <label for="start_period" class=" text-xl font-medium text-gray-700">시작기간:</label>
+                    <input type="month" id="start_period" name="start_period" value="2024-01" required class="flex-1 p-2  border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                
+                <!-- End Period -->
+                <div class="flex items-center space-x-4 mb-2">
+                    <label for="end_period" class=" text-xl font-medium text-gray-700">종료기간:</label>
+                    <input type="month" id="end_period" name="end_period" value="2024-08" required class="flex-1 p-2  border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                
+                <!-- Category -->
+                <div class="flex items-center space-x-4 mb-2">
+                    <label for="category" class=" text-xl font-medium text-gray-700">카테고리:</label>
+                    <select id="category" name="category" required class="flex-1 p-2  border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 xl:text-xl">
+                        <option value="상의">상의</option>
+                        <option value="바지">바지</option>
+                        <option value="아우터">아우터</option>
+                    </select>
+                </div>
+                
+                <!-- Filter Button -->
+                <div class="flex items-center space-x-4 mb-2">
+                    <button type="button" onclick="applyFilters()" class="px-3 py-1.5 bg-blue-500 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        적용
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Sentiment Analysis Results Section -->
+<section class="card bg-white shadow-md rounded-md p-4 mb-4 w-80">
+    <div class="block">
+        <h2>리뷰 긍/부정 비율</h2>
+        <div style="display: flex; justify-content: space-around;">
+            <div>
+                <h3>무신사 스탠다드</h3>
+                <canvas id="musinsaChart" width="300" height="300"></canvas>
+            </div>
+            <div>
+                <h3>SPA</h3>
+                <canvas id="spaChart" width="300" height="300"></canvas>
+            </div>
+        </div>
+        <pre id="sentimentAnalysisResult"></pre>
+    </div>
+</section>
+
+    <!-- Top Reviews Section -->
+    <section class="card bg-white shadow-md rounded-md p-2 mb-4 w-full">
+        <div class="block">
+            <h2>Top Reviews</h2>
+            <div class="emotions-buttons">
+                <label for="emotions" class="text-xl font-bold">긍/부정:</label>
+                <button type="button" onclick="setEmotions('positive')" class="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400">긍정</button>
+                <button type="button" onclick="setEmotions('negative')" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400">부정</button>
+            </div>
+
+            <!-- 테이블 섹션 -->
+            <div class="block">
+                <h2>무신사 스탠다드 - Top Reviews</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Review</th>
+                            <th>도움돼요 수</th>
+                        </tr>
+                    </thead>
+                    <tbody id="musinsaReviews">
+                        <!-- 무신사 스탠다드 리뷰 데이터가 여기에 삽입됩니다. -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="block">
+                <h2>SPA - Top Reviews</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Review</th>
+                            <th>도움돼요 수</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spaReviews">
+                        <!-- SPA 리뷰 데이터가 여기에 삽입됩니다. -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+
+            <!-- Topic Analysis Section -->
+        <section class="card bg-white shadow-md rounded-md p-2 mb-4 w-full">
+            <div class="block">
+                <h2>Topic Analysis</h2>
+                <div class="topic-buttons">
+                    <label for="topic">Topics:</label>
+                    <input type="checkbox" id="topic-size" class="topic-checkbox" value="사이즈" checked>
+                    <label for="topic-size">사이즈</label>
+                    <input type="checkbox" id="topic-material" class="topic-checkbox" value="재질" checked>
+                    <label for="topic-material">재질</label>
+                    <input type="checkbox" id="topic-design" class="topic-checkbox" value="디자인" checked>
+                    <label for="topic-design">디자인</label>
+                    <input type="checkbox" id="topic-satisfaction" class="topic-checkbox" value="만족도" checked>
+                    <label for="topic-satisfaction">만족도</label>
+                    <input type="checkbox" id="topic-thickness" class="topic-checkbox" value="두께감" checked>
+                    <label for="topic-thickness">두께감</label>
+                    <button type="button" onclick="fetchTopicAnalysis()">적용</button>
+                </div>
+           
+        
+
+                <!-- 무신사 스탠다드 Topic Analysis -->
+            
+                <div class="block">
+                    <h3>무신사 스탠다드 - Topic Reviews</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Category</th>
+                                <th>Review</th>
+                                <th>Helpful</th>
+                                <th>Highest Topic</th>
+                                <th>Highest Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="musinsaTopicReviews">
+                            <!-- 무신사 스탠다드 토픽 분석 결과가 여기에 삽입됩니다. -->
+                        </tbody>
+                    </table>
+                </div>
+            
+                <!-- SPA Topic Analysis -->
+                <div class="block">
+                    <h3>SPA - Topic Reviews</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Category</th>
+                                <th>Review</th>
+                                <th>Helpful</th>
+                                <th>Highest Topic</th>
+                                <th>Highest Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spaTopicReviews">
+                            <!-- SPA 토픽 분석 결과가 여기에 삽입됩니다. -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+            <!-- 방사형 그래프를 위한 Canvas 섹션 -->
+        <section class="card bg-white shadow-md rounded-md p-2 mb-4 w-full">
+            <div class="block">
+                <h2>Radar Charts</h2>
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <canvas id="musinsaRadar"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="spaRadar"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    <script>
+
+        let musinsaChartInstance = null;
+        let spaChartInstance = null;
+
+        function applyFilters() {
+            fetchSentimentAnalysis();
+            fetchTopReviews();
+            fetchTopicAnalysis();
+            fetchTopicAnalysisRadial();
+        }
+
+        function fetchSentimentAnalysis() {
+            const start_period = document.getElementById('start_period')?.value;
+            const end_period = document.getElementById('end_period')?.value;
+            const category = document.getElementById('category')?.value;
+
+            if (!start_period || !end_period || !category) {
+                console.error('필수 필드가 비어 있습니다.');
+                return;
+            }
+
+            const data = { start_period, end_period, category };
+
+            fetch('/review_sentiment_analysis/sentiment-analysis/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('Sentiment Analysis Result:', result); // 데이터 확인용
+               
+                renderCharts(result);  // 차트를 그립니다.
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('sentimentAnalysisResult').textContent = 'Error: ' + error;
+            });
+        }
+
+        function renderCharts(data) {
+            const musinsaChartCtx = document.getElementById('musinsaChart')?.getContext('2d');
+            if (!musinsaChartCtx) {
+                console.error('무신사 스탠다드 차트를 위한 캔버스가 없습니다.');
+                return;
+            }
+            if (musinsaChartInstance) {
+                musinsaChartInstance.destroy(); // 기존 차트 인스턴스 삭제
+            }
+            musinsaChartInstance = new Chart(musinsaChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['긍정', '부정'],
+                    datasets: [{
+                        data: [data[1].positive_count, data[1].negative_count], // 인덱스가 1인 데이터(무신사 스탠다드) 사용
+                        backgroundColor: ['#1f77b4','#aec7e8']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (context.parsed !== null) {
+                                        label += ': ' + context.parsed.toFixed(2) + ' (' + (context.parsed / (data[1].positive_count + data[1].negative_count) * 100).toFixed(2) + '%)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const spaChartCtx = document.getElementById('spaChart')?.getContext('2d');
+            if (!spaChartCtx) {
+                console.error('SPA 차트를 위한 캔버스가 없습니다.');
+                return;
+            }
+            if (spaChartInstance) {
+                spaChartInstance.destroy(); // 기존 차트 인스턴스 삭제
+            }
+            spaChartInstance = new Chart(spaChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['긍정', '부정'],
+                    datasets: [{
+                        data: [data[0].positive_count, data[0].negative_count], // 인덱스가 0인 데이터(SPA) 사용
+                        backgroundColor: ['#ff7f0e', '#ffbb78'] 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (context.parsed !== null) {
+                                        label += ': ' + context.parsed.toFixed(2) + ' (' + (context.parsed / (data[0].positive_count + data[0].negative_count) * 100).toFixed(2) + '%)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+  
+        function fetchTopicAnalysis() {
+            const start_period = document.getElementById('start_period').value;
+            const end_period = document.getElementById('end_period').value;
+            const category = document.getElementById('category').value;
+            const selected_topics = Array.from(document.querySelectorAll('.topic-checkbox:checked')).map(cb => cb.value);
+
+            const data = { start_period, end_period, category, selected_topics };
+
+            fetch('/review_sentiment_analysis/get-top-topics/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderTopicAnalysisTable(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        function renderTopReviews(data) {
+            const musinsaReviews = document.getElementById('musinsaReviews');
+            const spaReviews = document.getElementById('spaReviews');
+
+            musinsaReviews.innerHTML = ''; // Clear previous data
+            spaReviews.innerHTML = ''; // Clear previous data
+
+            data.forEach((categoryData, index) => {
+                const tableBody = index === 1 ? musinsaReviews : spaReviews;
+                categoryData.reviews.forEach((review, rank) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${rank + 1}</td>
+                        <td>${review.text}</td>
+                        <td>${review.helpfulness}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            });
+        }
+
+        function setEmotions(emotion) {
+            document.getElementById('emotions').value = emotion;
+            fetchTopReviews();  // Emotions 버튼이 클릭될 때마다 top-reviews를 가져옵니다.
+        }
+
+        function fetchTopReviews() {
+            const start_period = document.getElementById('start_period')?.value;
+            const end_period = document.getElementById('end_period')?.value;
+            const category = document.getElementById('category')?.value;
+            const emotions = document.getElementById('emotions')?.value || 'positive';  // 기본값 'positive'
+
+            if (!start_period || !end_period || !category) {
+                console.error('필수 필드가 비어 있습니다.');
+                return;
+            }
+
+            const data = { start_period, end_period, category, emotions };
+
+            fetch('/review_sentiment_analysis/get-top-reviews/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderReviewsTables(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function renderReviewsTables(reviewsData) {
+            const musinsaReviews = document.getElementById('musinsaReviews');
+            const spaReviews = document.getElementById('spaReviews');
+
+            const musinsaKeys = Object.keys(reviewsData).filter(key => key.startsWith('musinsa_positive') || key.startsWith('musinsa_negative'));
+            const spaKeys = Object.keys(reviewsData).filter(key => key.startsWith('spa_positive') || key.startsWith('spa_negative'));
+
+            musinsaReviews.innerHTML = musinsaKeys.map((key, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${reviewsData[key].review}</td>
+                    <td>${reviewsData[key].helpful}</td>
+                </tr>
+            `).join('');
+
+            spaReviews.innerHTML = spaKeys.map((key, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${reviewsData[key].review}</td>
+                    <td>${reviewsData[key].helpful}</td>
+                </tr>
+            `).join('');
+        }
+            window.onload = function() {
+                applyFilters();
+            };
+
+            function renderTopicAnalysisTable(data) {
+            const musinsaTopicReviews = document.getElementById('musinsaTopicReviews');
+            const spaTopicReviews = document.getElementById('spaTopicReviews');
+            
+            musinsaTopicReviews.innerHTML = data.musinsa_reviews.map((review, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${review.category}</td>
+                    <td>${review.review}</td>
+                    <td>${review.helpful}</td>
+                    <td>${review.highest_topic}</td>
+                    <td>${review.highest_score.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            spaTopicReviews.innerHTML = data.spa_reviews.map((review, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${review.category}</td>
+                    <td>${review.review}</td>
+                    <td>${review.helpful}</td>
+                    <td>${review.highest_topic}</td>
+                    <td>${review.highest_score.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            for (let i = data.musinsa_reviews.length; i < 5; i++) {
+                musinsaTopicReviews.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td colspan="5">데이터 없음</td>
+                    </tr>
+                `;
+            }
+
+            for (let i = data.spa_reviews.length; i < 5; i++) {
+                spaTopicReviews.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td colspan="5">데이터 없음</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderRadarChart(data) {
+            console.log("Received data:", data);
+            if (!data || !data.musinsa_averages || !data.spa_averages) {
+                console.error("유효한 데이터가 없습니다.");
+                return;
+            }
+
+            const topics = ["사이즈", "재질", "디자인", "만족도", "두께감"];
+
+            const musinsaScores = topics.map(topic => data.musinsa_averages[topic] || 0);
+            const spaScores = topics.map(topic => data.spa_averages[topic] || 0);
+
+            const ctxMusinsa = document.getElementById('musinsaRadar');
+            const ctxSpa = document.getElementById('spaRadar');
+
+            if (!ctxMusinsa || !ctxSpa) {
+                console.error("Canvas 요소를 찾을 수 없습니다.");
+                return;
+            }
+
+            Chart.getChart(ctxMusinsa)?.destroy();
+            Chart.getChart(ctxSpa)?.destroy();
+
+            const chartOptions = {
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            };
+
+            new Chart(ctxMusinsa, {
+                type: 'radar',
+                data: {
+                    labels: topics,
+                    datasets: [{
+                        label: '무신사 스탠다드',
+                        data: musinsaScores,
+                        backgroundColor: 'rgba(0, 100, 255, 0.3)',
+                        borderColor: 'rgba(0, 100, 255, 0.6)',
+                        borderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+
+            new Chart(ctxSpa, {
+                type: 'radar',
+                data: {
+                    labels: topics,
+                    datasets: [{
+                        label: 'SPA',
+                        data: spaScores,
+                        backgroundColor: 'rgba(255, 100, 0, 0.3)',
+                        borderColor: 'rgba(255, 100, 0, 0.6)',
+                        borderWidth: 2
+                    }]
+                },
+                options: chartOptions
+            });
+        }
+
+        function fetchTopicAnalysisRadial() {
+            const start_period = document.getElementById('start_period').value;
+            const end_period = document.getElementById('end_period').value;
+            const category = document.getElementById('category').value;
+
+            const data = { start_period, end_period, category };
+
+            fetch('/review_sentiment_analysis/topic-analysis-radial/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Parsed JSON data:", data);
+                renderRadarChart(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        // 페이지 로드 시 초기 데이터 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+
+            document.getElementById('end_period').value = `${currentYear}-${currentMonth}`;
+            
+            const threeMonthsAgo = new Date(currentDate.setMonth(currentDate.getMonth() - 3));
+            const threeMonthsAgoYear = threeMonthsAgo.getFullYear();
+            const threeMonthsAgoMonth = (threeMonthsAgo.getMonth() + 1).toString().padStart(2, '0');
+
+            document.getElementById('start_period').value = `${threeMonthsAgoYear}-${threeMonthsAgoMonth}`;
+
+            applyFilters();
+        });
+    </script>
+    <input type="hidden" id="emotions" name="emotions">
+    
+{% endblock %}

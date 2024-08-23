@@ -1,0 +1,62 @@
+{% extends 'navi.html' %}
+
+{% block title %}사용자 프로필{% endblock %}
+
+{% block content %}
+<div class="flex">
+    <aside class="w-1/4 bg-gray-200 p-4 rounded">
+        <h2 class="text-lg font-bold mb-4">사용자 프로필</h2>
+    </aside>
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="w-3/4 bg-white p-6 rounded shadow-md ml-4">
+        <h2 class="text-xl font-bold mb-4">마이페이지</h2>
+        <div class="flex mb-4">
+            <div class="w-1/4">
+                <div class="bg-gray-300 rounded-full h-24 w-24 mb-4"></div>
+            </div>
+            <div class="w-3/4">
+                <!-- <div class="flex items-center mb-4">
+                    <label for="username" class="w-1/4 text-gray-700">사용자 님:</label>
+                    <input type="text" id="username" class="w-3/4 p-2 border border-gray-300 rounded" value="{{ username }}" readonly>
+                </div> -->
+                <div class="flex items-center mb-4">
+                    <label for="userid" class="w-1/4 text-gray-700">사용자 ID:</label>
+                    <input type="text" id="userid" class="w-3/4 p-2 border border-gray-300 rounded bg-gray-100" value="{{ playdata }}" readonly>
+                </div>
+                <div class="flex items-center mb-4">
+                    <label for="password" class="w-1/4 text-gray-700">사용자 PW:</label>
+                    <input type="password" id="password" class="w-3/4 p-2 border border-gray-300 rounded bg-gray-100" value="{{ password }}" readonly>
+                    <button type="button" id="togglePassword" class="ml-2 p-1 border border-gray-300 rounded bg-gray-200 text-gray-700">보이기</button>
+                </div>
+                <!-- <div class="flex items-center mb-4">
+                    <label for="role" class="w-1/4 text-gray-700">사용자 권한:</label>
+                    <input type="text" id="role" class="w-3/4 p-2 border border-gray-300 rounded bg-gray-100" value="{{ role }}" readonly>
+                </div>
+                <div class="flex items-center">
+                    <label for="brand" class="w-1/4 text-gray-700">브랜드:</label>
+                    <input type="text" id="brand" class="w-3/4 p-2 border border-gray-300 rounded bg-gray-100" value="{{ brand }}" readonly> -->
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePasswordButton = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        let isPasswordVisible = false;
+
+        togglePasswordButton.addEventListener('click', function() {
+            if (isPasswordVisible) {
+                passwordInput.type = 'password';
+                togglePasswordButton.textContent = '보이기';
+            } else {
+                passwordInput.type = 'text';
+                togglePasswordButton.textContent = '숨기기';
+            }
+            isPasswordVisible = !isPasswordVisible;
+        });
+    });
+</script>
+{% endblock %}
