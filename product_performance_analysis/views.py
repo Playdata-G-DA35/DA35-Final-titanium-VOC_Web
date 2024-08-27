@@ -1,53 +1,70 @@
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.db.models import Case, When, Value, CharField, Sum, Avg, IntegerField, F, FloatField
+from django.db.models import Case, When, Value, CharField, Sum, Avg, FloatField
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 import json
 from django.contrib.auth.decorators import login_required
 from review_basic_analysis.models import ProductDetails, ProductReview
 
+def parse_request_body(request):
+    """Request body에서 JSON 데이터를 파싱하고, 유효성을 검사"""
+    try:
+        data = json.loads(request.body)
+        return data
+    except json.JSONDecodeError:
+        return None
+
+def validate_category_and_subcategory(data):
+    """카테고리와 서브카테고리 필드를 검증"""
+    category = data.get('category')
+    subcategories = data.get('subcategory', [])
+    if not category or not subcategories:
+        return None, None
+    if isinstance(subcategories, list):
+        subcategory_string = ", ".join(subcategories)
+    else:
+        subcategory_string = subcategories
+    return category, subcategory_string
+
+def get_products(category, subcategories, brand='무신사 스탠다드'):
+    """카테고리와 서브카테고리로 제품을 필터링합니다."""
+    return ProductDetails.objects.filter(
+        category=category,
+        subcategory__in=subcategories,
+        brand=brand
+    )
+
+def top_products_queryset(products, field_name):
+    """특정 필드의 상위 5개 제품을 가져옵니다."""
+    return products.order_by(f'-{field_name}')[:5]
+
 @csrf_exempt
 def product_performance_analysis_likes(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
+        data = parse_request_body(request)
+        if not data:
             return HttpResponseBadRequest("Invalid JSON data")
 
-        category = data.get('category')
-        subcategories = data.get('subcategory', [])
-
-        if not category or not subcategories:
+        category, subcategory_string = validate_category_and_subcategory(data)
+        if not category or not subcategory_string:
             return HttpResponseBadRequest("Missing 'category' or 'subcategory' fields")
 
-        if isinstance(subcategories, list):
-            subcategory_string = ", ".join(subcategories)
-        else:
-            subcategory_string = subcategories
+        products = get_products(category, data.get('subcategory', []))
+        top_products = top_products_queryset(products, 'product_like')
 
-        products = ProductDetails.objects.filter(
-            category=category,
-            subcategory__in=subcategories,
-            brand='무신사 스탠다드'
-        )
-
-        top_products = products.order_by('-product_like')[:5]
         product_likes = products.annotate(
             brand_group=Value('무신사 스탠다드', output_field=CharField())
         ).values('brand_group').annotate(
             average_like=Avg('product_like')
         ).order_by('brand_group')
 
-        performance_data = []
-        for product in product_likes:
-            rounded_average_like = round(product['average_like']) if product['average_like'] else 0
-            performance_data.append({
-                'category': category,
-                'subcategory': subcategory_string,
-                'brand': product['brand_group'],
-                'average_like': rounded_average_like,
-                'top_products': [p.product for p in top_products] if top_products.exists() else [] 
-            })
+        performance_data = [{
+            'category': category,
+            'subcategory': subcategory_string,
+            'brand': product['brand_group'],
+            'average_like': round(product['average_like']) if product['average_like'] else 0,
+            'top_products': [p.product for p in top_products]
+        } for product in product_likes]
 
         return JsonResponse(performance_data, safe=False)
     else:
@@ -57,33 +74,19 @@ def product_performance_analysis_likes(request):
 @csrf_exempt
 def product_performance_analysis_grades(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
+        data = parse_request_body(request)
+        if not data:
             return HttpResponseBadRequest("Invalid JSON data")
 
-        category = data.get('category')
-        subcategories = data.get('subcategory', [])
-
-        if not category or not subcategories:
+        category, subcategory_string = validate_category_and_subcategory(data)
+        if not category or not subcategory_string:
             return HttpResponseBadRequest("Missing 'category' or 'subcategory' fields")
 
-        if isinstance(subcategories, list):
-            subcategory_string = ", ".join(subcategories)
-        else:
-            subcategory_string = subcategories
-
-        products = ProductDetails.objects.filter(
-            category=category,
-            subcategory__in=subcategories,
-            brand='무신사 스탠다드'
-        )
-
+        products = get_products(category, data.get('subcategory', []))
         reviews = ProductReview.objects.filter(
             product_id__in=products.values('id')
         ).order_by('-grade')
 
-        # 중복된 product_id를 피하면서 상위 5개의 제품을 선택
         seen_product_ids = set()
         top_products = []
         for review in reviews:
@@ -99,15 +102,13 @@ def product_performance_analysis_grades(request):
             average_grade=Avg('grade')
         ).order_by('brand_group')
 
-        performance_data = []
-        for review in grade_averages:
-            performance_data.append({
-                'category': category,
-                'subcategory': subcategory_string,
-                'brand': review['brand_group'],
-                'average_grade': review['average_grade'] or 0,
-                'top_products': [p.product_id.product for p in top_products] if top_products else []
-            })
+        performance_data = [{
+            'category': category,
+            'subcategory': subcategory_string,
+            'brand': review['brand_group'],
+            'average_grade': review['average_grade'] or 0,
+            'top_products': [p.product_id.product for p in top_products]
+        } for review in grade_averages]
 
         return JsonResponse(performance_data, safe=False)
     else:
@@ -117,31 +118,18 @@ def product_performance_analysis_grades(request):
 @csrf_exempt
 def product_performance_analysis_views(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
+        data = parse_request_body(request)
+        if not data:
             return HttpResponseBadRequest("Invalid JSON data")
 
-        category = data.get('category')
-        subcategories = data.get('subcategory', [])
-
-        if not category or not subcategories:
+        category, subcategory_string = validate_category_and_subcategory(data)
+        if not category or not subcategory_string:
             return HttpResponseBadRequest("Missing 'category' or 'subcategory' fields")
 
-        if isinstance(subcategories, list):
-            subcategory_string = ", ".join(subcategories)
-        else:
-            subcategory_string = subcategories
-
-        products = ProductDetails.objects.filter(
-            category=category,
-            subcategory__in=subcategories,
-            brand='무신사 스탠다드'
-        )
-
+        products = get_products(category, data.get('subcategory', []))
         average_views = products.aggregate(average_views=Avg('views'))['average_views'] if products.exists() else 0
 
-        top_products = products.order_by('-views')[:5]
+        top_products = top_products_queryset(products, 'views')
 
         age_groups = products.aggregate(
             views_18=Sum('views_18'),
@@ -157,7 +145,7 @@ def product_performance_analysis_views(request):
             views_female=Sum('views_female')
         )
 
-        total_views = gender_views['views_male'] + gender_views['views_female'] if gender_views['views_male'] and gender_views['views_female'] else 0
+        total_views = (gender_views['views_male'] or 0) + (gender_views['views_female'] or 0)
         male_ratio = (gender_views['views_male'] / total_views * 100) if total_views > 0 else 0
         female_ratio = (gender_views['views_female'] / total_views * 100) if total_views > 0 else 0
 
@@ -165,7 +153,7 @@ def product_performance_analysis_views(request):
             'category': category,
             'subcategories': subcategory_string,
             'average_views': round(average_views) if average_views else 0,
-            'top_products': [p.product for p in top_products] if top_products.exists() else [],
+            'top_products': [p.product for p in top_products],
             'age_groups': age_groups,
             'gender_views': {
                 'views_male': gender_views['views_male'] or 0,
@@ -183,31 +171,18 @@ def product_performance_analysis_views(request):
 @csrf_exempt
 def product_performance_analysis_purchases(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
+        data = parse_request_body(request)
+        if not data:
             return HttpResponseBadRequest("Invalid JSON data")
 
-        category = data.get('category')
-        subcategories = data.get('subcategory', [])
-
-        if not category or not subcategories:
+        category, subcategory_string = validate_category_and_subcategory(data)
+        if not category or not subcategory_string:
             return HttpResponseBadRequest("Missing 'category' or 'subcategory' fields")
 
-        if isinstance(subcategories, list):
-            subcategory_string = ", ".join(subcategories)
-        else:
-            subcategory_string = subcategories
-
-        products = ProductDetails.objects.filter(
-            category=category,
-            subcategory__in=subcategories,
-            brand='무신사 스탠다드'
-        )
-
+        products = get_products(category, data.get('subcategory', []))
         average_purchases = products.aggregate(average_purchases=Avg('purchases'))['average_purchases'] if products.exists() else 0
 
-        top_products = products.order_by('-purchases')[:5]
+        top_products = top_products_queryset(products, 'purchases')
 
         age_groups = products.aggregate(
             purchases_18=Sum('purchases_18'),
@@ -223,7 +198,7 @@ def product_performance_analysis_purchases(request):
             purchases_female=Sum('purchases_female')
         )
 
-        total_purchases = gender_purchases['purchases_male'] + gender_purchases['purchases_female'] if gender_purchases['purchases_male'] and gender_purchases['purchases_female'] else 0
+        total_purchases = (gender_purchases['purchases_male'] or 0) + (gender_purchases['purchases_female'] or 0)
         male_ratio = (gender_purchases['purchases_male'] / total_purchases * 100) if total_purchases > 0 else 0
         female_ratio = (gender_purchases['purchases_female'] / total_purchases * 100) if total_purchases > 0 else 0
 
@@ -231,7 +206,7 @@ def product_performance_analysis_purchases(request):
             'category': category,
             'subcategories': subcategory_string,
             'average_purchases': round(average_purchases) if average_purchases else 0,
-            'top_products': [p.product for p in top_products] if top_products.exists() else [],
+            'top_products': [p.product for p in top_products],
             'age_groups': age_groups,
             'gender_purchases': {
                 'purchases_male': gender_purchases['purchases_male'] or 0,
@@ -249,9 +224,8 @@ def product_performance_analysis_purchases(request):
 @csrf_exempt
 def purchase_reviews_by_category(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
+        data = parse_request_body(request)
+        if not data:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
 
         category = data.get('category')
@@ -268,7 +242,7 @@ def purchase_reviews_by_category(request):
         for tag in reviewtags:
             field_name = f'reviewtag_{tag}'
             if field_name not in [f.name for f in ProductReview._meta.get_fields()]:
-                continue  # Skip invalid fields
+                continue
 
             review_tag_score = reviews.aggregate(
                 score=Avg(Case(

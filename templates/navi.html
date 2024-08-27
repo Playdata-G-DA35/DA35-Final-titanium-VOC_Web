@@ -1,127 +1,130 @@
+{% load static %}
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My Website{% endblock %}</title>
-    {% load static %}
+    <title>{% block title %}MUSINSA INSIGHTS{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'navi_style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet"> <!-- Google Fonts 링크 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sidebar { width: 250px; transition: all 0.3s; }
+        .sidebar.collapsed { width: 60px; }
+        .sidebar.collapsed .sidebar-full { display: none; }
+        .main-content { margin-left: 250px; transition: margin-left 0.3s; }
+        .main-content.sidebar-collapsed { margin-left: 60px; }
+        .nav-item.active > h3 { background-color: #e5e7eb; }
+        .nav-item.active > ul { display: block; }
+        /* 폰트 패밀리 적용 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="flex flex-col min-h-screen">
-    <!-- 상단 네비게이션 바 -->
-    <nav class="bg-gray-800 p-4 w-full fixed top-0 left-0 z-10">
-        <div class="flex items-center max-w-screen-xl mx-auto">
-            <a href="{% url 'main' %}" class="text-white text-xl mr-6">MUSINSA INSIGHTS</a>
-            <div class="ml-auto flex space-x-4">
-                <a href="{% url 'profile' %}" class="text-gray-300 hover:text-white px-3 py-2">프로필</a>
-                <a href="{% url 'question' %}" class="text-gray-300 hover:text-white px-3 py-2">문의하기</a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'logout' %}" class="text-gray-300 hover:text-white px-3 py-2">로그아웃</a>
-                {% endif %}
+<body class="bg-gray-100">
+    <nav id="sidebar" class="sidebar bg-white shadow-lg fixed h-full overflow-y-auto">
+        <div class="p-4">
+            <a href="{% url 'main' %}" class="flex items-center mb-8">
+                <img src="{% static 'musinsainsights_logo.png' %}" alt="MUSINSA INSIGHTS" class="w-full h-auto">
+            </a>
+            <p class="text-xs font-semibold text-gray-500 mb-2 sidebar-full">NAVIGATION</p>
+            <div class="sidebar-menu space-y-2">
+                <div class="nav-item rounded-lg overflow-hidden">
+                    <h3 class="flex items-center justify-between text-gray-600 hover:bg-gray-100 cursor-pointer font-bold p-2" id="brand-analysis-header">
+                        <span><i class="fas fa-chart-line mr-2"></i> <span class="sidebar-full">브랜드 분석</span></span>
+                        <i class="fas fa-chevron-down sidebar-full"></i>
+                    </h3>
+                    <ul id="brand-analysis-menu" class="mt-1 space-y-1 hidden sidebar-full">
+                        <li><a href="{% url 'main' %}" class="block px-4 py-2 text-gray-600 hover:bg-gray-100">메인 리포트</a></li>
+                        <li><a href="{% url 'review_basic' %}" class="block px-4 py-2 text-gray-600 hover:bg-gray-100">리뷰량 분석</a></li>
+                        <li><a href="{% url 'sentiment_analysis' %}" class="block px-4 py-2 text-gray-600 hover:bg-gray-100">리뷰 감정 분석</a></li>
+                    </ul>
+                </div>
+                <div class="nav-item rounded-lg overflow-hidden">
+                    <h3 class="flex items-center justify-between text-gray-600 hover:bg-gray-100 cursor-pointer font-bold p-2" id="product-analysis-header">
+                        <span><i class="fas fa-box-open mr-2"></i> <span class="sidebar-full">상품 분석</span></span>
+                        <i class="fas fa-chevron-down sidebar-full"></i>
+                    </h3>
+                    <ul id="product-analysis-menu" class="mt-1 space-y-1 hidden sidebar-full">
+                        <li><a href="{% url 'product_performance_analysis' %}" class="block px-4 py-2 text-gray-600 hover:bg-gray-100">상품 성과 분석</a></li>
+                        <li><a href="{% url 'product_detail' %}" class="block px-4 py-2 text-gray-600 hover:bg-gray-100">상품 상세 페이지</a></li>
+                    </ul>
+                </div>
             </div>
+        </div>
+        <div class="absolute bottom-4 left-4 right-4 space-y-2 sidebar-full">
+            <a href="https://www.musinsa.com" class="flex items-center text-gray-600 hover:text-blue-500">
+                <i class="fas fa-external-link-alt mr-2"></i> <span class="sidebar-full">무신사 홈페이지 이동</span>
+            </a>
+            <a href="{% url 'question' %}" class="flex items-center text-gray-600 hover:text-blue-500">
+                <i class="fas fa-question-circle mr-2"></i> <span class="sidebar-full">서비스 문의</span>
+            </a>
         </div>
     </nav>
 
-    <!-- 메인 레이아웃 -->
-    <div class="flex flex-1">
-        <!-- 사이드바 -->
-        <nav id="sidebar" class="bg-gray-900 sidebar-open p-6 text-white space-y-15 relative">
-            <div class="top-right-container">
-                <button id="toggle-btn" class="text-white toggle-btn">
+    <div id="main-content" class="main-content">
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <button id="toggle-btn" class="text-gray-500">
                     <i class="fas fa-bars"></i>
                 </button>
+                <div class="flex items-center">
+                    <a href="{% url 'profile' %}" class="text-gray-600 hover:text-gray-800 px-3 py-2 flex items-center">
+                        <i class="fas fa-user mr-2"></i>
+                        <span>프로필</span>
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'logout' %}" class="text-gray-600 hover:text-gray-800 px-3 py-2 flex items-center">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            <span>로그아웃</span>
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-            <div>
-                <h3 class="menu-item font-semibold text-lg text-gray-300 cursor-pointer hover:text-blue-400 flex items-center" id="brand-analysis-header">
-                    <span>브랜드 분석</span>
-                    <svg id="brand-arrow-icon" class="ml-2" width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M7 10l5 5 5-5H7z" fill="currentColor"/>
-                    </svg>
-                </h3>
-                <ul id="brand-analysis-menu" class="mt-2 space-y-2 hidden">
-                    <li><a href="{% url 'main' %}" class="menu-item flex items-center text-white hover:text-blue-400"><i class="fas fa-chart-line mr-2"></i> 메인 리포트</a></li>
-                    <li><a href="{% url 'review_basic' %}" class="menu-item flex items-center text-white hover:text-blue-400"><i class="fas fa-comment-dots mr-2"></i> 리뷰량 분석</a></li>
-                    <li><a href="{% url 'sentiment_analysis' %}" class="menu-item flex items-center text-white hover:text-blue-400"><i class="fas fa-smile mr-2"></i> 리뷰 감정 분석</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 class="menu-item font-semibold text-lg text-gray-300 cursor-pointer hover:text-blue-400 flex items-center" id="product-analysis-header">
-                    <span>상품 분석</span>
-                    <svg id="product-arrow-icon" class="ml-2" width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M7 10l5 5 5-5H7z" fill="currentColor"/>
-                    </svg>
-                </h3>
-                <ul id="product-analysis-menu" class="mt-2 space-y-2 hidden">
-                    <li><a href="{% url 'product_performance_analysis' %}" class="menu-item items-center text-white hover:text-blue-400"><i class="fas fa-box-open mr-2"></i> 상품 성과 분석</a></li>
-                    <li><a href="{% url 'product_detail' %}" class="menu-item flex items-center text-white hover:text-blue-400"><i class="fas fa-info-circle mr-2"></i> 상품 상세 페이지</a></li>
-                </ul>
-            </div>
-            <div class="space-y-2">
-                <a href="https://www.musinsa.com" class="menu-item flex items-center text-white hover:text-blue-400"><i class="fas fa-external-link-alt mr-2"></i> 무신사 홈페이지 이동</a>
-                <a href="{% url 'question' %}" class="menu-item flex items-center text-white hover:text-blue-400"><i class="fas fa-question-circle mr-2"></i> 서비스 문의</a>
-            </div>
-        </nav>
+        </header>
 
-        <!-- 메인 콘텐츠 영역 -->
-        <div class="flex-1 content-wrapper p-6">
-            <main class="container mx-auto">
-                {% block content %}
-                <!-- 각 페이지에 따른 콘텐츠가 여기에 들어갑니다. -->
-                {% endblock %}
-            </main>
-        </div>
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            {% block content %}
+            <!-- 각 페이지의 콘텐츠가 여기에 들어감 -->
+            {% endblock %}
+        </main>
     </div>
 
-    <!-- 하단 -->
-    <!-- <footer class="bg-gray-800 p-4 text-center text-white">
-        ©MUSINSA INSIGHTS
-    </footer> -->
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
-
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.getElementById('toggle-btn');
-            const brandHeader = document.getElementById('brand-analysis-header');
-            const brandMenu = document.getElementById('brand-analysis-menu');
-            const brandArrowIcon = document.getElementById('brand-arrow-icon');
-            const productHeader = document.getElementById('product-analysis-header');
-            const productMenu = document.getElementById('product-analysis-menu');
-            const productArrowIcon = document.getElementById('product-arrow-icon');
-            const contentWrapper = document.querySelector('.content-wrapper');
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const menuItems = document.querySelectorAll('.nav-item');
 
-            // 사이드바의 기본 상태를 열린 상태로 설정
-            contentWrapper.style.marginLeft = '16rem'; // 사이드바의 너비
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+        });
 
-            // 사이드바 토글
-            toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('sidebar-open');
-                sidebar.classList.toggle('sidebar-closed');
-                // 사이드바 상태에 따라 content-wrapper의 margin-left 조정
-                if (sidebar.classList.contains('sidebar-open')) {
-                    contentWrapper.style.marginLeft = '16rem'; // 사이드바의 너비
-                } else {
-                    contentWrapper.style.marginLeft = '0';
-                }
-            });
-
-            // 브랜드 분석 메뉴 토글
-            brandHeader.addEventListener('click', function() {
-                brandMenu.classList.toggle('hidden');
-                brandArrowIcon.classList.toggle('rotate-180');
-            });
-
-            // 상품 분석 메뉴 토글
-            productHeader.addEventListener('click', function() {
-                productMenu.classList.toggle('hidden');
-                productArrowIcon.classList.toggle('rotate-180');
+        menuItems.forEach(item => {
+            item.querySelector('h3').addEventListener('click', function() {
+                const submenu = this.nextElementSibling;
+                submenu.classList.toggle('hidden');
+                this.querySelector('.fa-chevron-down').classList.toggle('rotate-180');
             });
         });
 
+        // 현재 페이지 URL에 따라 해당 메뉴 항목 활성화
+        const currentPath = window.location.pathname;
+        const menuLinks = document.querySelectorAll('.sidebar-menu a');
+        menuLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.closest('.nav-item').classList.add('active');
+                link.closest('.nav-item').querySelector('ul').classList.remove('hidden');
+            }
+        });
+    });
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

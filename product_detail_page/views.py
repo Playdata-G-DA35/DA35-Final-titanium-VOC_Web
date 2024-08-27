@@ -1,13 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
-from django.db.models import Avg, Sum, Count, F
-from django.db.models import Case, When, Value, CharField, IntegerField, FloatField
+from django.db.models import Avg, Sum, Count, Case, When, IntegerField
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
 from review_basic_analysis.models import ProductDetails, ProductReview
 from django.views.decorators.csrf import csrf_exempt
 import json
-import datetime
-import calendar
 
 
 # custom_json_response 함수 정의
@@ -18,6 +15,7 @@ def custom_json_response(data, status=200):
         status=status
     )
 
+
 @csrf_exempt
 def product_detail_view(request):
     if request.method == "POST":
@@ -27,26 +25,22 @@ def product_detail_view(request):
             print(f"Received product name: {product_name}")  # 디버깅용
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format"}, status=400)
-        
-        # 전달받은 product_name이 None 또는 비어있지 않은지 확인
+
         if not product_name:
             return JsonResponse({"error": "Product name is missing or empty"}, status=400)
 
-        # 데이터 필터링 및 그룹화
         filtered_data = ProductDetails.objects.filter(product=product_name)\
             .annotate(average_grade=Avg('productreview__grade'))\
             .values('category', 'subcategory', 'product', 'product_like', 'product_price', 'average_grade')
 
-        # 필터링된 데이터가 있는지 확인
         if not filtered_data.exists():
             return JsonResponse({"error": "No data found for the selected product"}, status=404)
-        
-        # 결과를 JSON으로 반환
-        return custom_json_response(list(filtered_data))  # custom_json_response로 변경
+
+        return custom_json_response(list(filtered_data))
 
     else:
-        # GET 요청 시 템플릿 렌더링
         return render(request, 'product_detail_page.html')
+
 
 @csrf_exempt
 def product_details_analysis_views(request):
@@ -96,7 +90,7 @@ def product_details_analysis_views(request):
         return custom_json_response(response_data)
     else:
         return render(request, 'product_detail_page.html')
-    
+
 
 @csrf_exempt
 def product_details_analysis_purchases(request):
@@ -146,7 +140,7 @@ def product_details_analysis_purchases(request):
         return custom_json_response(response_data)
     else:
         return render(request, 'product_detail_page.html')
-    
+
 
 @csrf_exempt
 def review_count(request):
@@ -161,10 +155,8 @@ def review_count(request):
             return HttpResponseBadRequest("Invalid JSON data")
 
         try:
-            # 필터링된 리뷰 쿼리 (해당 상품에 대한 전체 기간 동안의 리뷰)
             reviews = ProductReview.objects.filter(product_id__product=product_name)
 
-            # 차트 타입에 따른 그룹핑
             if chart_type == 'daily':
                 reviews = reviews.annotate(period=TruncDay('date'))
             elif chart_type == 'weekly':
@@ -174,19 +166,17 @@ def review_count(request):
             else:
                 return HttpResponseBadRequest("Invalid chart_type value.")
 
-            # 기간별로 리뷰 수를 그룹화
             review_counts = reviews.values('period').annotate(
                 review_count=Count('id')
             ).order_by('period')
 
             return JsonResponse(list(review_counts), safe=False)
         except Exception as e:
-            # 예외가 발생한 경우 로그에 기록하고 500 오류 반환
             print(f"Error: {e}")
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return render(request, 'product_detail_page.html')
-    
+
 
 @csrf_exempt
 def product_topic_analysis_radial(request):
@@ -198,7 +188,7 @@ def product_topic_analysis_radial(request):
                 return HttpResponseBadRequest("Product name is missing.")
         except json.JSONDecodeError:
             return HttpResponseBadRequest("Invalid JSON data")
-        
+
         try:
             reviews = ProductReview.objects.filter(
                 product_id__product=product_name
@@ -210,7 +200,7 @@ def product_topic_analysis_radial(request):
             for review in reviews:
                 try:
                     if review.topic is None:
-                        continue  # Skip reviews with None topic
+                        continue 
                     topic_dict = json.loads(review.topic.replace("'", '"'))
 
                     review_count += 1
@@ -237,7 +227,6 @@ def product_topic_analysis_radial(request):
     return custom_json_response({"error": "Method not allowed"}, status=405)
 
 
-
 @csrf_exempt
 def product_sentiment_analysis_view(request):
     if request.method == 'POST':
@@ -250,12 +239,10 @@ def product_sentiment_analysis_view(request):
         if not product_name:
             return HttpResponseBadRequest("Product name is missing.")
 
-        # 전체 기간 동안의 리뷰 데이터를 가져옴
         reviews = ProductReview.objects.filter(
             product_id__product=product_name
         )
 
-        # 감정 분석 데이터 계산
         emotions = reviews.aggregate(
             positive_count=Sum(Case(When(emotions__iexact='positive', then=1), default=0, output_field=IntegerField())),
             negative_count=Sum(Case(When(emotions__iexact='negative', then=1), default=0, output_field=IntegerField())),
@@ -269,7 +256,6 @@ def product_sentiment_analysis_view(request):
         positive_ratio = positive_count / total_count
         negative_ratio = negative_count / total_count
 
-        # 결과를 JSON으로 반환
         emotion_data = {
             'product': product_name,
             'positive_count': positive_count,

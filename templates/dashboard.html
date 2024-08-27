@@ -1,107 +1,154 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}로그인 페이지{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>MUSINSA INSIGHTS Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* 배경 이미지 설정 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            background-image: url('https://cdn.bizwatch.co.kr/news/photo/2024/03/12/5cd7ce0015d828fa1645319aad3f8020.jpg');
+            font-family: 'Noto Sans KR', sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+        .image-container {
+            flex: 7;
+            background-image: url("{% static 'mi_cover.png' %}");
             background-size: cover;
-            background-repeat: no-repeat;
-            background-position: calc(100% - 20%) calc(0% + 50%);
+            background-position: center;
+        }
+        .login-container {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 50px;
+            background-color: white;
+        }
+        .logo {
+            width: 400px;
+            margin-bottom: 50px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .checkbox-container input {
+            width: auto;
+            margin-right: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
         }
     </style>
+</head>
+<body>
+    <div class="image-container"></div>
+    <div class="login-container">
+        <img src="{% static 'musinsainsights_logo.png' %}" alt="MUSINSA INSIGHTS" class="logo">
+        <h1>Login</h1>
+        <p>모든 패션 브랜드의 인사이트를 한눈에 파악하세요.<br>
+        패션 브랜드 담당자님! MUSINSA INSIGHTS 방문을 환영합니다.<br>
+        패션 비즈니스를 위한 모든 인사이트를 여기서 확인하세요.<br>
+        함께 더 나은 결정을 내리고, 브랜드의 성공을 초대하세요.</p>
+        {% if error_message %}
+        <div class="error-message">{{ error_message }}</div>
+        {% endif %}
+        <form id="loginForm" method="post" action="{% url 'dashboard' %}">
+            {% csrf_token %}
+            <input type="text" id="username" name="username" placeholder="Email or Username" required>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <div class="checkbox-container">
+                <input type="checkbox" id="remember" name="remember_me">
+                <label for="remember">아이디 저장</label>
+            </div>
+            <button type="submit">로그인</button>
+        </form>
+    </div>
+
     <script>
-        // 쿠키에 값설정 함수
         function setCookie(name, value, days) {
             var expires = "";
             if (days) {
-                // 현재 시간에 주어진 일 수를 더해 쿠키의 만료 날짜를 설정
                 var date = new Date();
                 date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
                 expires = "; expires=" + date.toUTCString();
             }
-            // 쿠키를 설정하는 코드
             document.cookie = name + "=" + (value || "") + expires + "; path=/";
         }
 
-        // 쿠키에서 값을 가져오는 함수
         function getCookie(name) {
             var nameEQ = name + "=";
-            var ca = document.cookie.split(';'); // 모든 쿠키를 배열로 분리
+            var ca = document.cookie.split(';');
             for (var i = 0; i < ca.length; i++) {
                 var c = ca[i];
-                while (c.charAt(0) == ' ') c = c.substring(1, c.length); // 앞의 공백 제거
-                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length); // 해당 쿠키 값 반환
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
             }
-            return null; // 쿠키가 없으면 null 반환
+            return null;
         }
 
-        // 페이지 로드 시 실행되는 함수
         function onLoad() {
-            // 'savedUsername' 쿠키에서 저장된 사용자 이름을 가져옴
             var savedUsername = getCookie("savedUsername");
             if (savedUsername) {
-                // 저장된 아이디가 있으면, ID 입력 필드에 값을 설정
                 document.getElementById("username").value = savedUsername;
-                // 체크박스를 체크된 상태로 설정
                 document.getElementById("remember").checked = true;
             }
         }
 
-        // 폼 제출 시 실행되는 함수
-        function onFormSubmit() {
-            // 체크박스가 체크되어 있는지 확인
+        function onFormSubmit(event) {
             var rememberMe = document.getElementById("remember").checked;
-            // ID 입력 필드의 값을 가져옴
             var username = document.getElementById("username").value;
             if (rememberMe) {
-                // 체크박스가 체크되어 있으면, 쿠키에 ID를 30일 동안 저장
-                setCookie("savedUsername", username, 30);  
+                setCookie("savedUsername", username, 30);
             } else {
-                // 체크박스가 체크되지 않았으면, 쿠키를 삭제
-                setCookie("savedUsername", "", -1);  
+                setCookie("savedUsername", "", -1);
             }
+            // 폼 제출을 계속 진행
+            return true;
         }
+
+        window.onload = onLoad;
+
+        document.getElementById('loginForm').addEventListener('submit', onFormSubmit);
     </script>
-</head>
-<body class="flex items-center justify-center min-h-screen" onload="onLoad()">
-    <!-- 페이지 콘텐츠 -->
-    <main class="absolute bottom-70 right-4 p-4">
-        <div class="bg-black p-20 rounded shadow-md w-full max-w-4xl">
-            <!-- 페이지 제목 -->
-            <div class="rounded mb-4 text-center text-white text-3xl">
-                MUSINSA INSIGHTS
-            </div>
-            <!-- 로그인 폼 -->
-            <form method="post" action="{% url 'dashboard' %}" class="space-y-6" onsubmit="onFormSubmit()">
-                {% csrf_token %}
-                <!-- ID 입력 필드 -->
-                <div>
-                    <label for="username" class="block text-sm font-medium text-white">ID</label>
-                    <input type="text" id="username" name="username" class="mt-1 block w-full p-4 border border-gray-300 rounded">
-                </div>
-                <!-- 비밀번호 입력 필드 -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-white">Password</label>
-                    <input type="password" id="password" name="password" class="mt-1 block w-full p-4 border border-gray-300 rounded">
-                </div>
-                <!-- 아이디 저장 체크박스 -->
-                <div class="flex items-center">
-                    <input type="checkbox" id="remember" name="remember_me" class="h-5 w-5 text-indigo-600 border-gray-300 rounded">
-                    <label for="remember" class="ml-2 block text-sm text-white">아이디 저장</label>
-                </div>
-                <!-- 로그인 버튼 -->
-                <button type="submit" class="w-full bg-blue-600 text-white p-4 rounded">로그인</button>
-            </form>
-            <!-- 문의하기 링크 -->
-            <div class="mt-6 text-center">
-                <a href="#" class="text-blue-600">Musinsa Insights 서비스 문의하기</a>
-            </div>
-        </div>
-    </main>
 </body>
 </html>

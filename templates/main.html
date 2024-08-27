@@ -5,124 +5,570 @@
 {% block content %}
 {% load static %}
 
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="keyword" content="">
+    <meta name="author" content="WRAPCODERS">
+    <title>내 브랜드 조회 및 구매 현황</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
 <div class="flex flex-col min-h-screen">
-    <div class="container mx-auto flex flex-1 overflow-hidden">
-        <main class="bg-gray-0 flex-1 p-8 space-y-8 overflow-auto">
-            <!-- 메인 리포트 -->
-            <section class="flex flex-col space-y-4">
-                <h2 class="font-bold bg-gray-300 p-2 text-left text-2xl box2">메인 리포트</h2>
-                <div class="flex space-x-4">
-                    <div class="flex-1 bg-gray-100 p-4 rounded-lg overflow-auto ">
-                        <div class="flex items-center justify-between">
-                            <h3 class="font-bold text-3xl">브랜드 선호도</h3>
-                            <p class="font-bold bg-gray-200 p-2 text-right text-lg box">전일 기준</p>
-                        </div>
-                        <div class="mt-2 flex items-center">
-                            <img src="{% static 'image/mu_logo.png' %}" alt="musinsa standard" style="width:120px;height:100;">
-                            <span class="ml-auto text-5xl whitespace-nowrap">78.3만</span>
-                            <img src="{% static 'image/like_logo.png' %}" class="ml-2" alt="like_logo" style="width:50px;height:auto;">
-                        </div>
+    < class="container mx-auto p-4">
+        <!-- 메인 리포트 -->
+        <section class="bg-black p-2 rounded-lg shadow-md mb-6" style="margin-top: -20px; width: 100%; margin-left: 0; right: 0; height: 40px; display: flex; align-items: center;">
+            <h2 class="font-bold text-lg text-white" style="margin-left: 15px;">브랜드 분석 > 메인 리포트</h2>
+        </section>
+    
+        <!-- 브랜드 선호도와 SPA 업종 브랜드 선호도 -->
+        <div class="flex space-x-4">
+            <!-- 브랜드 선호도 -->
+            <section class="flex-1 bg-white p-3 rounded-lg shadow-md" style="height: 120px; position: relative;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-500">내 브랜드 선호도</h3>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        전일기준
                     </div>
-                    <div class="flex-1 bg-gray-100 p-4 rounded-lg overflow-auto">
-                        <div class="flex items-center justify-between">
-                            <h3 class="font-bold text-3xl">SPA 업종 브랜드 선호도</h3>
-                            <p class="font-bold bg-gray-200 p-2 text-right text-lg box">전일 기준</p>
-                        </div>
-                        <div class="mt-2 flex items-center">
-                            <img src="{% static 'image/82_logo.png' %}" alt="spao" style="width:80px;">
-                            <img src="{% static 'image/topten_logo.png' %}" alt="spao" style="width:80px;">
-                            <img src="{% static 'image/spao_logo.png' %}" alt="spao" style="width:80px;">
-                            <span class="ml-auto text-5xl whitespace-nowrap">30.4만</span>
-                            <img src="{% static 'image/like_logo.png' %}" class="ml-2" alt="like_logo" style="width:50px;height:auto;">
-                        </div> 
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <img src="{% static 'image/musinsastandard_logo.png' %}" alt="musinsa standard" class="w-20 h-auto ml-2">
+                    </div>
+                    <div class="text-right flex items-center">
+                        <p class="flex items-center font-bold text-xl">
+                            <span style="color: #fdfd96; font-size: 1.5rem; margin-right: 0.5rem;">&#x2764;</span> 좋아요 78.3만
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                    무신사 스탠다드 2024-08-04일자 기준
+                </div>
+            </section>
+        
+            <!-- SPA 업종 브랜드 선호도 -->
+            <section class="flex-1 bg-white p-3 rounded-lg shadow-md" style="height: 120px; position: relative;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-500">SPA 브랜드 선호도</h3>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        전일 기준
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <img src="{% static 'image/SPA_brand_logo.png' %}" alt="SPA brand logo" class="w-20 h-auto ml-2">
+                    </div>
+                    <div class="text-right flex items-center">
+                        <p class="flex items-center font-bold text-xl">
+                            <span style="color: #fdfd96; font-size: 1.5rem; margin-right: 0.5rem;">&#x2764;</span> 좋아요 30.4만
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                    SPA 브랜드 2024-08-04일자 기준
+                </div>
+            </section>
+        </div>
+        
+                <!-- 상품 랭킹 정보 -->
+            <section class="bg-white p-4 rounded-lg shadow-md mt-6">
+                <!-- 브랜드 내 상품 랭킹 정보 제목 -->
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-bold text-sm text-gray-500">브랜드 내 상품 랭킹 정보</h2>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        전일기준
+                    </div>
+                </div>
+
+                <!-- 상품 랭킹 카드들 -->
+                <div class="flex space-x-4 mt-4 overflow-x-auto style="padding-right: 16px;">
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">1위</p>
+                        <img src="{% static 'image/musinsa_rank_image_1.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">레이어드 슬리브리스 탑_일반 기장</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">2위</p>
+                        <img src="{% static 'image/musinsa_rank_image_2.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">라이트웨이트 크루 삭스 7팩</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">3위</p>
+                        <img src="{% static 'image/musinsa_rank_image_3.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">레이어드 슬리브리스 탑_일반 기장</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">4위</p>
+                        <img src="{% static 'image/musinsa_rank_image_4.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">릴렉스 핏 크루 넥 반팔 티셔츠 2</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">5위</p>
+                        <img src="{% static 'image/musinsa_rank_image_5.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">라이트웨이트 미들 삭스 7팩</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">6위</p>
+                        <img src="{% static 'image/musinsa_rank_image_6.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">릴렉스 핏 크루 넥 반팔 티셔츠 2팩</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">7위</p>
+                        <img src="{% static 'image/musinsa_rank_image_7.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">릴렉스 핏 크루 넥 반팔 티셔츠 2팩</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">8위</p>
+                        <img src="{% static 'image/musinsa_rank_image_8.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">[쿨탠다드] 맨즈 드로즈 3팩</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">9위</p>
+                        <img src="{% static 'image/musinsa_rank_image_9.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">릴렉스드 테이퍼드 히든 밴딩 크롭 슬랙스</p>
+                    </div>
+                    <div class="flex-none bg-white p-4 rounded-lg shadow-md w-64 overflow-hidden border border-gray-300">
+                        <p class="text-left font-bold">10위</p>
+                        <img src="{% static 'image/musinsa_rank_image_10.jpg' %}" alt="상품 이미지" class="w-full h-48 object-cover mb-2">
+                        <p class="truncate">레플리카 퍼티그 팬츠</p>
                     </div>
                 </div>
             </section>
 
-            <!--  상품 랭킹 정보 -->
-            <section>
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <h2 class="text-xl font-bold">브랜드 내 상품 랭킹 정보</h2>
-                    <div class="flex space-x-2 mt-4 overflow-x-auto">
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">1위</p>
-                            <img src="{% static 'image/musinsa_rank_image_1.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">레이어드 슬리브리스 탑_일반 기장</p>
+            <!-- 24-28세, 남성에게 인기 많은 상품 섹션 -->
+            <section class="mt-6">
+                <div class="flex space-x-4 mt-4">
+                    <!-- 내 브랜드 조회 및 구매 현황 (60%) -->
+                    <section class="bg-white p-4 rounded-lg shadow-md flex-1 relative" style="flex-basis: 60%;">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-sm font-bold text-gray-500">내 브랜드 조회 및 구매 현황 > 연령대별 현황</h2>
+                            <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                                전일기준
+                            </div>
                         </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">2위</p>
-                            <img src="{% static 'image/musinsa_rank_image_2.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">라이트웨이트 크루 삭스 7팩</p>
+                        <div class="mt-1">
+                            <div class="chart-container">
+                                <canvas id="viewsPurchasesChart" style="max-width: 100%; height: 250px;"></canvas>
+                            </div>
                         </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">3위</p>
-                            <img src="{% static 'image/musinsa_rank_image_3.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">레이어드 슬리브리스 탑_일반 기장</p>
+
+                        <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                        <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                            무신사 스탠다드 2024-08-04일자 기준
                         </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">4위</p>
-                            <img src="{% static 'image/musinsa_rank_image_4.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">릴렉스 핏 크루 넥 반팔 티셔츠 2</p>
+                    </section>
+
+                    <!-- 추가 섹션 (40%) -->
+                    <section class="bg-white p-4 rounded-lg shadow-md flex-1 relative" style="flex-basis: 40%;">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-sm font-bold text-gray-500">무신사 스탠다드</h2>
+                            <div>
+                                <button id="showViewsPieChartBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                                    조회수
+                                </button>
+                                <button id="showPurchasesPieChartBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                                    구매수
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">5위</p>
-                            <img src="{% static 'image/musinsa_rank_image_5.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">라이트웨이트 미들 삭스 7팩</p>
+                        <div class="mt-2">
+                            <div class="chart-container" style="max-width: 100%; height: 200px;">
+                                <canvas id="viewsPieChart" style="max-width: 100%; height: 100%;"></canvas>
+                                <canvas id="purchasesPieChart" style="display: none; max-width: 100%; height: 100%;"></canvas>
+                            </div>
                         </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">6위</p>
-                            <img src="{% static 'image/musinsa_rank_image_6.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">릴렉스 핏 크루 넥 반팔 티셔츠 2팩</p>
+                        <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                        <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                            무신사 스탠다드 2024-08-04일자 기준
                         </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">7위</p>
-                            <img src="{% static 'image/musinsa_rank_image_7.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">릴렉스 핏 크루 넥 반팔 티셔츠 2팩</p>
-                        </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">8위</p>
-                            <img src="{% static 'image/musinsa_rank_image_8.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">[쿨탠다드] 맨즈 드로즈 3팩</p>
-                        </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">9위</p>
-                            <img src="{% static 'image/musinsa_rank_image_9.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">릴렉스드 테이퍼드 히든 밴딩 크롭 슬랙스</p>
-                        </div>
-                        <div class="flex-none bg-gray-100 p-2 rounded-lg w-64 overflow-hidden product-container">
-                            <p class="text-left font-bold">10위</p>
-                            <img src="{% static 'image/musinsa_rank_image_10.jpg' %}" alt="상품 이미지" class="product-image">
-                            <p class="product-name">레플리카 퍼티그 팬츠</p>
-                        </div>
-                    </div>
+                    </section>
                 </div>
+
+                <script>
+                    // 데이터 설정
+                    const labels = ['18세', '19-23세', '24-28세', '29-33세', '34-39세', '40세 이상'];
+                    const viewsData = [28763, 78253, 136756, 146278, 77265, 71235];
+                    const purchasesData = [35935, 170009, 233397, 219562, 115887, 112410];
+
+                    // 차트 데이터
+                    const chartData = {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '조회수',
+                                data: viewsData,
+                                backgroundColor: 'rgba(253, 253, 150, 0.5)', // 파스텔 노란색
+                                borderColor: 'rgba(253, 253, 150, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '구매수',
+                                data: purchasesData,
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)', // 검정색
+                                borderColor: 'rgba(0, 0, 0, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '조회수 선',
+                                data: viewsData,
+                                type: 'line',
+                                fill: false,
+                                borderColor: 'rgba(253, 253, 150, 1)', // 노란색
+                                borderWidth: 2,
+                                tension: 0.4,
+                                pointRadius: 0, // 원 없애기
+                                showLine: true,
+                            },
+                            {
+                                label: '구매수 선',
+                                data: purchasesData,
+                                type: 'line',
+                                fill: false,
+                                borderColor: 'rgba(0, 0, 0, 1)', // 검정색
+                                borderWidth: 2,
+                                tension: 0.4,
+                                pointRadius: 0, // 원 없애기
+                                showLine: true,
+                            }
+                        ]
+                    };
+
+                    // 차트 생성
+                    const ctx = document.getElementById('viewsPurchasesChart').getContext('2d');
+                    const viewsPurchasesChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        display: false // 그리드 숨기기
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false // 그리드 숨기기
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                        filter: function(item) {
+                                            return item.text !== '조회수 선' && item.text !== '구매수 선';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // 성별 조회수 및 구매수 Pie 차트 데이터 설정
+                    const viewsPieData = {
+                        labels: ['남성 조회수', '여성 조회수'],
+                        datasets: [{
+                            data: [460147, 78403],
+                            backgroundColor: ['rgba(253, 253, 150, 0.5)', 'rgba(0, 0, 0, 0.5)'],
+                            borderColor: ['rgba(253, 253, 150, 1)', 'rgba(0, 0, 0, 1)'],
+                            borderWidth: 1
+                        }]
+                    };
+
+                    const purchasesPieData = {
+                        labels: ['남성 구매수', '여성 구매수'],
+                        datasets: [{
+                            data: [757959, 129241],
+                            backgroundColor: ['rgba(253, 253, 150, 0.5)', 'rgba(0, 0, 0, 0.5)'],
+                            borderColor: ['rgba(253, 253, 150, 1)', 'rgba(0, 0, 0, 1)'],
+                            borderWidth: 1
+                        }]
+                    };
+
+                    // 조회수 Pie 차트 생성
+                    const ctxViewsPie = document.getElementById('viewsPieChart').getContext('2d');
+                    const viewsPieChart = new Chart(ctxViewsPie, {
+                        type: 'pie',
+                        data: viewsPieData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // 구매수 Pie 차트 생성
+                    const ctxPurchasesPie = document.getElementById('purchasesPieChart').getContext('2d');
+                    const purchasesPieChart = new Chart(ctxPurchasesPie, {
+                        type: 'pie',
+                        data: purchasesPieData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // 버튼 클릭 시 차트 전환
+                    document.getElementById('showViewsPieChartBtn').addEventListener('click', function() {
+                        document.getElementById('viewsPieChart').style.display = 'block';
+                        document.getElementById('purchasesPieChart').style.display = 'none';
+                    });
+
+                    document.getElementById('showPurchasesPieChartBtn').addEventListener('click', function() {
+                        document.getElementById('viewsPieChart').style.display = 'none';
+                        document.getElementById('purchasesPieChart').style.display = 'block';
+                    });
+                </script>
             </section>
 
-            <!-- 브랜드 인기 연령대 및 성별 -->
-            <section>
-                <div class="flex flex-col space-y-4">
-                    <div class="bg-gray-100 p-4 rounded-lg">
-                        <h2 class="text-xl font-bold">브랜드 인기 연령대 및 성별</h2>
-                        <div class="grid grid-cols-1 gap-4 mt-4">
-                            <div class="bg-gray-100 p-4 rounded-lg">
-                                <h3 class="font-bold">24-28세, 남성에게 인기 많은 상품</h3>
-                                <div class="mt-2 flex space-x-4 overflow-auto">
-                                    <img src="{% static 'image/mu_bar.png' %}" alt="연령대 및 성별 그래프" style="width: 800px; height: auto;">
-                                    <img src="{% static 'image/mu_py.png' %}" alt="연령대 및 성별 그래프" style="width: 510px; height: auto;">
-                                </div>
-                            </div>
-                            <div class="bg-gray-100 p-4 rounded-lg">
-                                <h4 class="font-bold">40세이상, 남성에게 인기 많은 상품</h4>
-                                <div class="mt-2 flex space-x-4 overflow-auto">
-                                    <img src="{% static 'image/all_spa_bar.png' %}" alt="연령대 및 성별 그래프" style="width: 800px; height: auto;">
-                                    <img src="{% static 'image/all_spa_py.png' %}" alt="연령대 및 성별 그래프" style="width: 510px; height: auto;">
-                                </div>
+
+            <!-- 40세 이상, 남성에게 인기 많은 상품 섹션 -->
+            <section class="mt-6">
+                <div class="flex space-x-4 mt-4">
+                    <!-- SPA 브랜드 조회 및 구매 현황 (60%) -->
+                    <section class="bg-white p-4 rounded-lg shadow-md flex-1 relative" style="flex-basis: 60%;">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-sm font-bold text-gray-500">SPA 브랜드 조회 및 구매 현황 > 연령대별 현황</h2>
+                            <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                                전일기준
                             </div>
                         </div>
-                    </div>
+                        <div class="mt-2">
+                            <div class="chart-container">
+                                <canvas id="spaViewsPurchasesChart" style="max-width: 100%; height: 250px;"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                        <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                            SPA 브랜드 2024-08-04일자 기준
+                        </div>
+                    </section>
+                    
+                    <!-- 추가 섹션 (40%) -->
+                    <section class="bg-white p-4 rounded-lg shadow-md flex-1 relative" style="flex-basis: 40%;">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-sm font-bold text-gray-500">SPA 브랜드</h2>
+                            <div>
+                                <button id="showSpaViewsPieChartBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                                    조회수
+                                </button>
+                                <button id="showSpaPurchasesPieChartBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                                    구매수
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="chart-container" style="max-width: 100%; height: 200px;">
+                                <canvas id="spaViewsPieChart" style="max-width: 100%; height: 100%;"></canvas>
+                                <canvas id="spaPurchasesPieChart" style="display: none; max-width: 100%; height: 100%;"></canvas>
+                            </div>
+                        </div>
+                        <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                        <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                            SPA 브랜드 2024-08-04일자 기준
+                        </div>
+                    </section>
                 </div>
+
+                <script>
+                    // SPA 데이터 설정
+                    const spaLabels = ['18세', '19-23세', '24-28세', '29-33세', '34-39세', '40세 이상'];
+                    const spaViewsData = [45996, 146256, 147600, 66249, 50329, 152621];
+                    const spaPurchasesData = [44800, 66562, 70940, 57156, 35861, 72880];
+
+                    // SPA 차트 데이터
+                    const spaData = {
+                        labels: spaLabels,
+                        datasets: [
+                            {
+                                label: '조회수',
+                                data: spaViewsData,
+                                backgroundColor: 'rgba(253, 253, 150, 0.5)', // 파스텔 노란색
+                                borderColor: 'rgba(253, 253, 150, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '구매수',
+                                data: spaPurchasesData,
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)', // 검정색
+                                borderColor: 'rgba(0, 0, 0, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '조회수 선',
+                                data: spaViewsData,
+                                type: 'line',
+                                fill: false,
+                                borderColor: 'rgba(253, 253, 150, 1)', // 노란색
+                                borderWidth: 2,
+                                tension: 0.4, // S자형 그래프 만들기
+                                pointRadius: 0, // 원 없애기
+                                showLine: true,
+                            },
+                            {
+                                label: '구매수 선',
+                                data: spaPurchasesData,
+                                type: 'line',
+                                fill: false,
+                                borderColor: 'rgba(0, 0, 0, 1)', // 검정색
+                                borderWidth: 2,
+                                tension: 0.4, // S자형 그래프 만들기
+                                pointRadius: 0, // 원 없애기
+                                showLine: true,
+                            }
+                        ]
+                    };
+
+                    // SPA 차트 생성
+                    const spaCtx = document.getElementById('spaViewsPurchasesChart').getContext('2d');
+                    const spaViewsPurchasesChart = new Chart(spaCtx, {
+                        type: 'bar',
+                        data: spaData,
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        display: false // 그리드 숨기기
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false // 그리드 숨기기
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        usePointStyle: true, // 동그라미로 표시
+                                        pointStyle: 'circle',
+                                        filter: function(item, chart) {
+                                            // '조회수 선'과 '구매수 선'은 범례에서 제외
+                                            return item.text !== '조회수 선' && item.text !== '구매수 선';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // SPA 조회수 및 구매수 Pie 차트 데이터 설정
+                    const spaViewsPieData = {
+                        labels: ['남성 조회수', '여성 조회수'],
+                        datasets: [{
+                            data: [375343, 233707],
+                            backgroundColor: ['rgba(253, 253, 150, 0.5)', 'rgba(0, 0, 0, 0.5)'], // 노란색, 검정색
+                            borderColor: ['rgba(253, 253, 150, 1)', 'rgba(0, 0, 0, 1)'], // 테두리
+                            borderWidth: 1
+                        }]
+                    };
+
+                    const spaPurchasesPieData = {
+                        labels: ['남성 구매수', '여성 구매수'],
+                        datasets: [{
+                            data: [203949, 144253],
+                            backgroundColor: ['rgba(253, 253, 150, 0.5)', 'rgba(0, 0, 0, 0.5)'], // 노란색, 검정색
+                            borderColor: ['rgba(253, 253, 150, 1)', 'rgba(0, 0, 0, 1)'], // 테두리
+                            borderWidth: 1
+                        }]
+                    };
+
+                    // SPA 조회수 Pie 차트 생성
+                    const spaViewsPieCtx = document.getElementById('spaViewsPieChart').getContext('2d');
+                    const spaViewsPieChart = new Chart(spaViewsPieCtx, {
+                        type: 'pie',
+                        data: spaViewsPieData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // SPA 구매수 Pie 차트 생성
+                    const spaPurchasesPieCtx = document.getElementById('spaPurchasesPieChart').getContext('2d');
+                    const spaPurchasesPieChart = new Chart(spaPurchasesPieCtx, {
+                        type: 'pie',
+                        data: spaPurchasesPieData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    align: 'end',
+                                    labels: {
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // 버튼 클릭 시 차트 전환
+                    document.getElementById('showSpaViewsPieChartBtn').addEventListener('click', function() {
+                        document.getElementById('spaViewsPieChart').style.display = 'block';
+                        document.getElementById('spaPurchasesPieChart').style.display = 'none';
+                    });
+
+                    document.getElementById('showSpaPurchasesPieChartBtn').addEventListener('click', function() {
+                        document.getElementById('spaViewsPieChart').style.display = 'none';
+                        document.getElementById('spaPurchasesPieChart').style.display = 'block';
+                    });
+                </script>
             </section>
-        </main>
     </div>
 </div>
 {% endblock %}

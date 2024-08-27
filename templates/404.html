@@ -1,0 +1,18 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found</title>
+</head>
+<body>
+    <div style="text-align: center;">
+        <h1>404 - Page Not Found</h1>
+        <img src="{% static 'error_image/404_image.png' %}" alt="404 Image" style="max-width: 100%; height: auto;">
+        <p>Sorry, the page you are looking for does not exist.</p>
+        <a href="/">Go back to homepage</a>
+    </div>
+</body>
+</html>

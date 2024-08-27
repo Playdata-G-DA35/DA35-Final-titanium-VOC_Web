@@ -1,149 +1,263 @@
 {% extends 'navi.html' %}
 
+{% load static %}
+
 {% block title %}리뷰량 분석{% endblock %}
 
 {% block content %}
-{% load static %}
-<script src="https://d3js.org/d3.v7.min.js"></script>
 
-<link rel="stylesheet" href="{% static 'basic_html.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+<style>
+    .navigation-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px; /* 버튼 너비 */
+        height: 50px; /* 버튼 높이 */
+        background-color: #000000; /* 버튼 배경 색상 */
+        border-radius: 15px; /* 둥근 사각형 */
+        color: #ffffff; /* 화살표 색상 흰색 */
+        font-size: 30px; /* 화살표 크기 */
+        cursor: pointer; /* 클릭 가능한 커서 */
+        transition: background-color 0.3s ease; /* 배경색 변화에 대한 부드러운 전환 */
+        text-align: center; /* 화살표를 가운데 정렬 */
+        }
 
-<!-- 상단의 기간 선택 및 차트 필터 폼 -->
-<h1 class="font-bold bg-gray-300 p-2 text-left text-2xl box2">리뷰량 분석</h1>
-<section class="card bg-white shadow-md rounded-md p-2 mb-4 w-80">
-    <form method="post" id="periodForm">
-        <div class="header-container">
-            <div class="form-container">
+    .navigation-button.left {
+        margin-right: 8px; /* 왼쪽 화살표와 이미지 사이의 간격 */
+    }
+
+    .navigation-button.right {
+        margin-left: 8px; /* 오른쪽 화살표와 이미지 사이의 간격 */
+    }
+
+    .navigation-button:hover {
+        background-color: #333333; /* 마우스 오버 시 배경색 변화 */
+    }
+    .wordcloud-title {
+        text-align: center; /* 텍스트를 가운데 정렬합니다. */
+        font-size: 1.25rem; /* 텍스트 크기를 설정합니다. */
+        font-weight: bold; /* 텍스트를 굵게 표시합니다. */
+        margin: 0; /* 기본 여백을 제거합니다. */
+    }
+    /* 가격대별 단어 빈도 섹션 스타일 */
+    section {
+        position: relative; /* 절대 위치를 사용할 수 있도록 설정합니다. */
+    }
+
+    #wordFrequencyTables {
+        display: flex;
+        gap: 1rem; /* 테이블 간의 간격을 일정하게 설정 */
+        flex-wrap: wrap; /* Flexbox를 사용하여 테이블을 나란히 배치하고 필요한 경우 줄바꿈 허용 */
+        justify-content: center; /* 테이블을 수평으로 가운데 정렬 */
+        margin: 0 auto; /* 컨테이너 자체를 중앙에 위치시키기 */
+        max-width: 100%; /* 컨테이너가 페이지 너비를 초과하지 않도록 설정 */
+        padding: 0; /* 컨테이너의 기본 패딩을 제거 */
+    }
+
+    .table-container {
+        background-color: #ffffff;
+        padding: 0.25rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        flex: 0 1 45%; /* 테이블의 고정 너비를 비율로 설정하여 크기가 일정하게 유지되도록 설정 */
+        min-width: 250px; /* 테이블 최소 폭 설정 */
+        margin: 10px 0; /* 테이블의 위아래 간격을 일정하게 설정 */
+    }
+
+    table {
+        width: 100%; /* 테이블이 컨테이너의 폭을 맞추도록 설정 */
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 0.25rem; /* 셀 패딩을 줄임 */
+        text-align: left;
+        font-size: 0.75rem; /* 폰트 크기를 줄임 */
+    }
+
+    th {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<div class="flex flex-col min-h-screen">
+    <div class="container mx-auto p-4">
+        <!-- 리뷰량 분석 헤더 -->
+        <section class="bg-black p-2 rounded-lg shadow-md mb-6" style="margin-top: -20px; width: 100%; margin-left: 0; right: 0; height: 40px; display: flex; align-items: center;">
+            <h2 class="font-bold text-lg text-white" style="margin-left: 15px;">브랜드 분석 > 리뷰량 분석</h2>
+        </section>
+
+        <!-- 기간 선택 및 필터 폼 -->
+        <section class="bg-white p-4 rounded-lg shadow-md mb-6">
+            <form method="post" id="periodForm" class="flex items-center space-x-4">
                 {% csrf_token %}
-                <div class="form-group">
-                    <label for="start_period" class= "text-xl">시작 기간:</label>
-                    <input type="month" id="start_period" name="start_period" value="2024-01" required>
+                <div class="flex-1">
+                    <label for="start_period" class="block text-sm font-medium text-gray-700">시작 기간:</label>
+                    <input type="month" id="start_period" name="start_period" value="2024-01" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                 </div>
-                
-                <div class="form-group">
-                    <label for="end_period" class= "text-xl">종료 기간:</label>
-                    <input type="month" id="end_period" name="end_period" value="2024-08" required>
+                <div class="flex-1">
+                    <label for="end_period" class="block text-sm font-medium text-gray-700">종료 기간:</label>
+                    <input type="month" id="end_period" name="end_period" value="2024-08" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                 </div>
-                
-                <div class="form-group">
-                    <label for="category" class= "text-xl">카테고리:</label>
-                    <select id="category" name="category" required>
+                <div class="flex-1">
+                    <label for="category" class="block text-sm font-medium text-gray-700">카테고리:</label>
+                    <select id="category" name="category" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
                         <option value="상의">상의</option>
                         <option value="바지">바지</option>
                         <option value="아우터">아우터</option>
                     </select>
                 </div>
-                
-                <div class="form-group">
-                    <button type="submit" onclick="fetchWordclouds() ,fetchWordFrequency();" class="active">적용</button>
+                <div class="flex-1">
+                    <button type="submit" class="w-full text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" style="background-color: rgba(253, 253, 150, 0.5);">
+                        적용
+                    </button>
                 </div>
-            </div>
-        </div>
-    </form>
-</section>
-<!-- 날짜타입 선택 부분을 새로운 위치에 추가 -->
-<section class="card bg-white shadow-md rounded-md p-4 mb-5">
-    <h2>리뷰량 비교:</h2>
-    <div class="chart-container">
-        <div class="chart-type-selector">
-            <label for="chart_type">날짜타입:</label>
-            <select id="chart_type" name="chart_type" required>
-                <option value="monthly">월별</option>
-                <option value="weekly">주별</option>
-                <option value="daily">일별</option>
-            </select>
-        </div>
-    </div>
-    <div id="chart"></div>
-</section>
+                <input type="hidden" id="chart_type" name="chart_type" value="daily">
+            </form>
+        </section>
 
-<section class="card bg-white shadow-md rounded-md p-4 mb-5">
-    <!-- 카테고리 별 단어 빈도 분석 -->
-    <div class="block">
-        <h2>카테고리 별 단어 빈도 분석</h2>
-        <div class="chart-type-buttons" style="text-align: right;">
-            <button onclick="fetchWordclouds()" class="bg-gray-200">월별</button>
-        </div>
-        <div class="wordcloud-container">
-            <div class="wordcloud-block">
-                <h3 id="musinsaWordcloudTitle">무신사 스탠다드</h3>
-                <div class="navigation-button left" onclick="navigateWordcloud('musinsa', -1)">&#8249;</div>
-                <div id="musinsaWordcloud">
-                    <img id="musinsaWordcloudImage" alt="Musinsa Wordcloud" />
-                </div>
-                <div class="navigation-button right" onclick="navigateWordcloud('musinsa', 1)">&#8250;</div>
+        <!-- 리뷰량 비교 차트 -->
+        <section class="bg-white p-4 rounded-lg shadow-md mb-6 relative">
+            <h2 class="font-bold text-sm text-gray-500">리뷰량 비교 분석</h2>
+            <div class="absolute top-4 right-4 flex space-x-2">
+                <button onclick="updateReviewCounts('daily')" class="bg-black text-xs text-white font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                    일별
+                </button>
+                <button onclick="updateReviewCounts('weekly')" class="bg-black text-xs text-white font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                    주별
+                </button>
+                <button onclick="updateReviewCounts('monthly')" class="bg-black text-xs text-white font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                    월별
+                </button>
             </div>
-            <div class="wordcloud-block">
-                <h3 id="spaWordcloudTitle">SPA</h3>
-                <div class="navigation-button left" onclick="navigateWordcloud('spa', -1)">&#8249;</div>
-                <div id="spaWordcloud">
-                    <img id="spaWordcloudImage" alt="SPA Wordcloud" />
-                </div>
-                <div class="navigation-button right" onclick="navigateWordcloud('spa', 1)">&#8250;</div>
-            </div>
-        </div>
-    </div>
-</section>
+            <canvas id="reviewChart" style="max-width: 100%; height: 70px;"></canvas>
+        </section>
 
-<section class="card bg-white shadow-md rounded-md p-4 mb-5">
-    <div class="block price-range-container">
-        <div id="wordFrequencyTables" >
+        <!-- 브랜드별 성별 비율 -->
+        <section class="bg-white p-4 rounded-lg shadow-md mb-6">
+            <h2 class="font-bold text-sm text-gray-500 mb-4">브랜드별 성별 비율</h2>
+            <div class="flex space-x-4">
+                <section class="bg-white p-4 rounded-lg shadow-md flex-1 relative" style="flex-basis: 40%;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-bold text-gray-500">무신사 스탠다드</h2>
+                    </div>
+                    <div class="mt-2">
+                        <div class="chart-container" style="max-width: 100%; height: 200px;">
+                            <canvas id="musinsaPieChart" style="max-width: 100%; height: 100%;"></canvas>
+                        </div>
+                    </div>
+                    <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                    <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                        무신사 스탠다드 기간 및 카테고리 필터링 기준
+                    </div>
+                </section>
+
+                <section class="bg-white p-4 rounded-lg shadow-md flex-1 relative" style="flex-basis: 40%;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-bold text-gray-500">SPA</h2>
+                    </div>
+                    <div class="mt-2">
+                        <div class="chart-container" style="max-width: 100%; height: 200px;">
+                            <canvas id="spaPieChart" style="max-width: 100%; height: 100%;"></canvas>
+                        </div>
+                    </div>
+                    <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                    <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                        SPA 기간 및 카테고리 필터링 기준
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <!-- 카테고리별 단어 빈도 분석 -->
+        <div class="flex space-x-4">
+            <section class="bg-white p-4 rounded-lg shadow-md mb-6 flex-1">
+                <h2 class="font-bold text-sm text-gray-500 relative">무신사 스탠다드 단어 빈도 분석</h2>
+                <div class="wordcloud-block">
+                    <h3 id="musinsaWordcloudTitle" class="wordcloud-title">무신사 스탠다드</h3>
+                    <div class="flex items-center">
+                        <div class="navigation-button left" onclick="navigateWordcloud('musinsa', -1)">&#8249;</div>
+                        <div id="musinsaWordcloud" class="flex-1">
+                            <img id="musinsaWordcloudImage" alt="Musinsa Wordcloud" class="mx-auto" />
+                        </div>
+                        <div class="navigation-button right" onclick="navigateWordcloud('musinsa', 1)">&#8250;</div>
+                    </div>
+                </div>
+                <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                    무신사 스탠다드 기간 및 카테고리 필터링 기준
+                </div>
+            </section>
+            <section class="bg-white p-4 rounded-lg shadow-md mb-6 flex-1">
+                <h2 class="font-bold text-sm text-gray-500 relative">SPA 단어 빈도 분석</h2>
+                <div class="wordcloud-block">
+                    <h3 id="spaWordcloudTitle" class="wordcloud-title">SPA</h3>
+                    <div class="flex items-center">
+                        <div class="navigation-button left" onclick="navigateWordcloud('spa', -1)">&#8249;</div>
+                        <div id="spaWordcloud" class="flex-1">
+                            <img id="spaWordcloudImage" alt="SPA Wordcloud" class="mx-auto" />
+                        </div>
+                        <div class="navigation-button right" onclick="navigateWordcloud('spa', 1)">&#8250;</div>
+                    </div>
+                </div>
+                <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+                <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+                    SPA 기간 및 카테고리 필터링 기준
+                </div>
+            </section>
         </div>
-        <div class="price-range-buttons">
-            <span class="price-range-label">가격대:</span>
-            <button onclick="fetchWordFrequency();showPriceRange('1~2만원대')">1~2만원대</button>
-            <button onclick=" showPriceRange('3~4만원대')">3~4만원대</button>
-            <button onclick=" showPriceRange('5만원대 이상')">5만원대 이상</button>
+
+        <!-- 가격대별 단어 빈도 -->
+        <section class="bg-white p-4 rounded-lg shadow-md mb-6 relative">
+            <div class="flex justify-between items-center mb-4 relative">
+                <h2 class="font-bold text-sm text-gray-500">가격대별 단어 빈도 분석</h2>
+                <div class="flex flex-row items-center space-x-2">
+                    <button onclick="showPriceRange('1~2만원대')" class="bg-black text-xs text-white font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        1~2만원대
+                    </button>
+                    <button onclick="showPriceRange('3~4만원대')" class="bg-black text-xs text-white font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        3~4만원대
+                    </button>
+                    <button onclick="showPriceRange('5만원대 이상')" class="bg-black text-xs text-white font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        5만원대 이상
+                    </button>
+                </div>
+            </div>
+            <div id="wordFrequencyTables" class="flex justify-center space-x-2" style="margin-top: 20px; margin-left: 10px;">
+                <!-- 각 테이블을 감싸는 div -->
+                <div class="table-container flex-1" style="max-width: 48%;">
+                    <div id="priceRange1to2Table"></div>
+                </div>
+                <div class="table-container flex-1" style="max-width: 48%;">
+                    <div id="priceRange3to4Table"></div>
+                </div>
+                <div class="table-container flex-1" style="max-width: 48%;">
+                    <div id="priceRange5Table"></div>
+                </div>
+            </div>
+        <!-- 왼쪽 하단에 작은 텍스트 추가 -->
+        <div class="absolute bottom-2 right-2 text-xs text-gray-300 ml-4">
+            무신사 스탠다드 & SPA 기간 및 카테고리 필터링 기준
         </div>
+        </section>
     </div>
-</section>
-<!-- 성별 비율 도넛 차트 -->
-<section class="card bg-white shadow-md rounded-md p-4 mb-5">
-    <h2 class= text-3xl>브랜드별 성별 비율</h2>
-    <div class="charts-container">
-        <div id="musinsaPieChart"></div>
-        <div id="spaPieChart"></div>
-    </div>
-</section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('periodForm').dispatchEvent(new Event('submit', { 'bubbles': true }));
     });
-
+    
     document.getElementById('periodForm').onsubmit = function(event) {
         event.preventDefault();
-
-        const start_period = document.getElementById('start_period').value;
-        const end_period = document.getElementById('end_period').value;
-        const category = document.getElementById('category').value;
-        const chart_type = document.getElementById('chart_type').value;
-
-        const data = {
-            start_period: start_period,
-            end_period: end_period,
-            category: [category],
-            chart_type: chart_type
-        };
-
-        fetch('/review/get-filtered-reviews/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken') // CSRF 토큰 추가
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            renderLineChart(result);
-            fetchGenderDistribution(); // 성별 분포 데이터 가져오기
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('chart').innerHTML = 'Error: ' + error;
-        });
+        fetchData();
     };
-
+    
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -158,199 +272,239 @@
         }
         return cookieValue;
     }
-
+    
+    let reviewChart;
+    
     function renderLineChart(data) {
-        // Clear previous chart
-        d3.select("#chart").selectAll("*").remove();
+        const canvas = document.getElementById('reviewChart');
+        const ctx = canvas.getContext('2d');
 
-        const margin = {top: 20, right: 20, bottom: 30, left: 50},
-            width = 960 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom;
+        // 기존 차트가 존재하면 삭제
+        if (reviewChart) {
+            reviewChart.destroy();
+            reviewChart = null; // null로 초기화하여 이전 차트 인스턴스를 제거
+        }
 
-        const parseTime = d3.timeParse("%Y-%m-%d");
-        const formatTime = d3.timeFormat("%m월 %d일"); // 한국어 형식으로 날짜 포맷
+        // 캔버스를 깨끗하게 초기화
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const x = d3.scaleTime().range([0, width]);
-        const y = d3.scaleLinear().range([height, 0]);
+        // 브랜드별 색상 정의
+        const colorMapping = {
+            '무신사 스탠다드': 'rgba(0, 0, 0, 0.5)', // 무신사 스탠다드 색상
+            'SPA': 'rgba(253, 253, 150, 0.5)' // SPA 색상
+        };
 
-        const line = d3.line()
-            .x(d => x(d.date))
-            .y(d => y(d.review_count));
+        const datasets = Array.from(new Set(data.map(d => d.brand_group))).map(brand => ({
+            label: brand,
+            data: data.filter(d => d.brand_group === brand).map(d => ({
+                x: new Date(d.period),
+                y: d.review_count
+            })),
+            borderColor: colorMapping[brand] || '#000000',
+            pointRadius: 0,
+            pointBorderWidth: 0, // 동그라미 테두리 제거
+            fill: false,
+            tension: 0.4
+        }));
 
-        const svg = d3.select("#chart").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        // 새로운 차트 생성
+        reviewChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                    display: true,
+                    position: 'top', // 우측 상단에 위치
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true, // 레전드 아이템에 포인트 스타일 사용
+                        pointStyle: 'circle', // 레전드 아이템 스타일을 동그라미로 설정
+                        color: '#333', // 레전드 텍스트 색상
+                        font: {
+                            size: 12 // 레전드 텍스트 크기
+                        },
+                        generateLabels: function(chart) {
+                            // 레전드 라벨을 사용자 정의
+                            return chart.data.datasets.map((dataset, i) => {
+                                return {
+                                    text: dataset.label,
+                                    fillStyle: dataset.borderColor, // 레전드 아이템 색상
+                                    lineWidth: 0, // 라인 폭 설정
+                                    strokeStyle: dataset.borderColor, // 라인 색상
+                                    hidden: !chart.isDatasetVisible(i)
+                                };
+                            });
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                        displayFormats: {
+                            day: 'MM/dd' // 날짜 형식
+                        }
+                    },
+                    grid: {
+                        display: false // X축 그리드 제거
+                    },
+                    title: {
+                        display: false, // X축 제목 숨김
+                        text: '날짜'
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false // Y축 그리드 제거
+                    },
+                    title: {
+                        display: false, // Y축 제목 숨김
+                        text: '리뷰 수'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+    
+    
+    let musinsaPieChartInstance; // 전역 변수로 선언
+    let spaPieChartInstance; // 전역 변수로 선언
 
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
+    function renderPieChart(data, canvasId, title) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
 
-        const brands = Array.from(new Set(data.map(d => d.brand_group)));
+        // 기존 차트가 존재하면 삭제
+        if (canvasId === 'musinsaPieChart' && musinsaPieChartInstance) {
+            musinsaPieChartInstance.destroy();
+        } else if (canvasId === 'spaPieChart' && spaPieChartInstance) {
+            spaPieChartInstance.destroy();
+        }
 
-        color.domain(brands);
-
-        data.forEach(d => {
-            d.date = parseTime(d.period);
-            d.review_count = +d.review_count;
+        const newPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['여성', '남성'],
+                datasets: [{
+                    data: [data.Female_count, data.Male_count],
+                    backgroundColor: ['rgba(253, 253, 150, 0.5)', 'rgba(0, 0, 0, 0.5)'],
+                    hoverBackgroundColor: ['rgba(253, 253, 150, 1)', 'rgba(0, 0, 0, 1)']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: title
+                    }
+                }
+            }
         });
 
-        // 그룹핑
-        const dataNest = d3.group(data, d => d.brand_group);
-
-        x.domain(d3.extent(data, d => d.date));
-        y.domain([0, d3.max(data, d => d.review_count)]);
-
-        svg.selectAll(".line")
-            .data(Array.from(dataNest.entries()))
-        .enter().append("path")
-            .attr("class", "line")
-            .attr("d", d => line(d[1]))
-            .style("stroke", d => color(d[0]))
-            .style("fill", "none")
-            .style("stroke-width", "2px");
-
-        svg.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x)
-                .tickFormat(d => formatTime(d)) // 한국어로 날짜 포맷
-            );
-
-        svg.append("g")
-            .attr("class", "y axis")
-            .call(d3.axisLeft(y));
-
-        const legend = svg.selectAll(".legend")
-            .data(brands)
-        .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", (d, i) => "translate(0," + (i * 20) + ")");
-
-        legend.append("rect")
-            .attr("x", width - 18)
-            .attr("width", 18)
-            .attr("height", 18)
-            .style("fill", d => color(d));
-
-        legend.append("text")
-            .attr("x", width - 24)
-            .attr("y", 9)
-            .attr("dy", ".35em")
-            .style("text-anchor", "end")
-            .text(d => d);
+        // 차트 인스턴스를 전역 변수에 저장
+        if (canvasId === 'musinsaPieChart') {
+            musinsaPieChartInstance = newPieChart;
+        } else if (canvasId === 'spaPieChart') {
+            spaPieChartInstance = newPieChart;
+        }
     }
-
-    function renderPieChart(data, containerId, colorScheme, title) {
-    // Clear previous pie chart
-    d3.select(containerId).selectAll("*").remove();
-
-    const margin = {top: 20, right: 20, bottom: 30, left: 20},
-        width = 500 - margin.left - margin.right,
-        height = 400 - margin.top - margin.bottom,
-        radius = Math.min(width, height) / 2;
-
-    const svg = d3.select(containerId).append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + (width / 2 + margin.left) + "," + (height / 2 + margin.top) + ")");
-
-    const color = colorScheme; // 색상 정의
-
-    const pie = d3.pie()
-        .sort(null)
-        .value(d => d.value);
-
-    const arc = d3.arc()
-        .outerRadius(radius - 10)
-        .innerRadius(radius - 120); // 도넛 모양으로 설정
-
-    const labelArc = d3.arc()
-        .outerRadius(radius - 40)
-        .innerRadius(radius - 40);
-
-    const pieData = [
-        {label: '여성', value: data.Female_count},
-        {label: '남성', value: data.Male_count}
-    ];
-
-    const arcs = svg.selectAll(".arc")
-        .data(pie(pieData))
-    .enter().append("g")
-        .attr("class", "arc");
-
-    arcs.append("path")
-        .attr("d", arc)
-        .style("fill", d => color(d.data.label))
-        .style("stroke", "#fff") // Add stroke to ensure visibility
-        .style("stroke-width", "2px");
-
-    arcs.append("text")
-        .attr("transform", d => "translate(" + labelArc.centroid(d) + ")")
-        .attr("dy", ".35em")
-        .style("text-anchor", "middle")
-        .text(d => `${Math.round(d.data.value / d3.sum(pieData, d => d.value) * 100)}%`);
-
-    // Add legend
-    const legend = d3.select(containerId).append("div")
-        .attr("class", "legend");
-
-    pieData.forEach((d) => {
-        legend.append("div")
-            .attr("class", "legend-item")
-            .html(`
-                <div class="legend-color-box" style="background-color: ${color(d.label)}"></div>
-                ${d.label}
-            `);
-    });
-
-    // Add title
-    d3.select(containerId).append("div")
-        .attr("class", "chart-title")
-        .style("text-align", "center")
-        .style("font-size", "18px")
-        .style("font-weight", "bold")
-        .text(title);
-}
-
-
-function fetchGenderDistribution() {
-    const start_period = document.getElementById('start_period').value;
-    const end_period = document.getElementById('end_period').value;
-    const category = document.getElementById('category').value;
-
-    const data = {
-        start_period: start_period,
-        end_period: end_period,
-        category: [category]
-    };
-
-    fetch('/review/get-gender-distribution/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken') // CSRF 토큰 추가
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        const musinsaData = result.find(d => d.brand_group === '무신사 스탠다드') || {};
-        const spaData = result.find(d => d.brand_group === 'SPA') || {};
-        
-        const musinsaColorScheme = d3.scaleOrdinal(["#aec7e8","#1f77b4"]); // 무신사 파란색 계열
-        const spaColorScheme = d3.scaleOrdinal(["#ffbb78","#ff7f0e"]); // SPA 주황색 계열
-        
-        renderPieChart(musinsaData, "#musinsaPieChart", musinsaColorScheme, "무신사 스탠다드 성별 분포");
-        renderPieChart(spaData, "#spaPieChart", spaColorScheme, "SPA 성별 분포");
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('musinsaPieChart').innerHTML = 'Error: ' + error;
-        document.getElementById('spaPieChart').innerHTML = 'Error: ' + error;
-    });
-}
-let wordcloudsData = {
+    
+    function fetchData() {
+        const start_period = document.getElementById('start_period').value;
+        const end_period = document.getElementById('end_period').value;
+        const category = document.getElementById('category').value;
+        const chart_type = document.getElementById('chart_type').value;
+    
+        const data = {
+            start_period: start_period,
+            end_period: end_period,
+            category: [category],
+            chart_type: chart_type
+        };
+    
+        fetch('/review/get-filtered-reviews/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            renderLineChart(result);
+            fetchGenderDistribution();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('reviewChart').innerHTML = 'Error: ' + error;
+        });
+    }
+    
+    function fetchGenderDistribution() {
+        const start_period = document.getElementById('start_period').value;
+        const end_period = document.getElementById('end_period').value;
+        const category = document.getElementById('category').value;
+    
+        const data = {
+            start_period: start_period,
+            end_period: end_period,
+            category: [category]
+        };
+    
+        fetch('/review/get-gender-distribution/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            const musinsaData = result.find(d => d.brand_group === '무신사 스탠다드') || {};
+            const spaData = result.find(d => d.brand_group === 'SPA') || {};
+            
+            renderPieChart(musinsaData, 'musinsaPieChart', '무신사 스탠다드 성별 분포');
+            renderPieChart(spaData, 'spaPieChart', 'SPA 성별 분포');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    function updateReviewCounts(chartType) {
+        document.getElementById('chart_type').value = chartType;
+        fetchData();
+    }
+    
+    function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+    
+    let wordcloudsData = {
         musinsa: [],
         spa: []
     };
@@ -358,47 +512,21 @@ let wordcloudsData = {
         musinsa: 0,
         spa: 0
     };
-
-    function fetchData() {
-        updateReviewCounts('daily');  // 기본값으로 일별 데이터 표시
-        fetchWordclouds();
-        fetchWordFrequency();
-    }
-
-    function updateReviewCounts(chartType) {
-        const start_period = document.getElementById('start_period').value;
-        const end_period = document.getElementById('end_period').value;
-        const category = document.getElementById('category').value;
-
-        const data = { start_period, end_period, category, chart_type: chartType };
-
-        fetch('/review/get-filtered-reviews/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            document.getElementById('reviewCountsResult').textContent = JSON.stringify(result, null, 2);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('reviewCountsResult').textContent = 'Error: ' + error;
-        });
-    }
-
-
+    
     function fetchWordclouds() {
         const start_period = document.getElementById('start_period').value;
         const end_period = document.getElementById('end_period').value;
         const category = document.getElementById('category').value;
-
+    
         const brands = ['무신사 스탠다드', 'SPA'];
-
+    
         brands.forEach(brand => {
             fetch('/review/get-review-wordcloud/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
                 body: JSON.stringify({ start_period, end_period, category, brand })
             })
             .then(response => response.json())
@@ -418,55 +546,83 @@ let wordcloudsData = {
             });
         });
     }
-
+    
     function updateWordcloud(brand) {
         const brandId = brand === 'musinsa' ? 'musinsa' : 'spa';
         const wordcloudData = wordcloudsData[brandId];
         const currentIndex = currentWordcloudIndex[brandId];
-
+    
         if (wordcloudData && wordcloudData.length > 0) {
             const imgElement = document.getElementById(brandId + 'WordcloudImage');
             const titleElement = document.getElementById(brandId + 'WordcloudTitle');
             const currentData = wordcloudData[currentIndex];
-
+    
             imgElement.src = 'data:image/png;base64,' + currentData.image;
-            titleElement.textContent = currentData.filename;
+            // 파일 이름에서 숫자를 추출하여 월로 변환
+            const filename = currentData.filename;
+            const monthMatch = filename.match(/(\d+)/);
+            let monthText = '';
+            if (monthMatch) {
+                const monthNumber = parseInt(monthMatch[1], 10);
+                switch (monthNumber) {
+                    case 1: monthText = '1월'; break;
+                    case 2: monthText = '2월'; break;
+                    case 3: monthText = '3월'; break;
+                    case 4: monthText = '4월'; break;
+                    case 5: monthText = '5월'; break;
+                    case 6: monthText = '6월'; break;
+                    case 7: monthText = '7월'; break;
+                    case 8: monthText = '8월'; break;
+                    case 9: monthText = '9월'; break;
+                    case 10: monthText = '10월'; break;
+                    case 11: monthText = '11월'; break;
+                    case 12: monthText = '12월'; break;
+                    default: monthText = '월'; break;
+                }
+            }
+            titleElement.textContent = monthText;
         }
     }
-
+    
     function navigateWordcloud(brand, direction) {
         const brandId = brand === 'musinsa' ? 'musinsa' : 'spa';
         const wordcloudData = wordcloudsData[brandId];
-
+    
         if (wordcloudData && wordcloudData.length > 0) {
             currentWordcloudIndex[brandId] += direction;
-
+    
             if (currentWordcloudIndex[brandId] < 0) {
                 currentWordcloudIndex[brandId] = wordcloudData.length - 1;
             } else if (currentWordcloudIndex[brandId] >= wordcloudData.length) {
                 currentWordcloudIndex[brandId] = 0;
             }
-
+    
             updateWordcloud(brandId);
         }
     }
-
-
-
-
+    
     function createTable(priceRange, brand, data) {
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'table-container'; // CSS 클래스 적용
+
+        // data-price-range와 data-brand 속성을 추가합니다.
+        tableContainer.dataset.priceRange = priceRange;
+        tableContainer.dataset.brand = brand;
+
         const table = document.createElement('table');
-        table.border = "1";
+        table.style.width = '100%';
+        table.style.tableLayout = 'fixed';
+        table.style.borderCollapse = 'collapse';
 
         const thead = document.createElement('thead');
         thead.innerHTML = `
             <tr>
-                <th colspan="3">${brand} - ${priceRange}</th>
+                <th colspan="3" style="background-color: black; color: white; text-align: center;">${brand}</th>
             </tr>
             <tr>
-                <th>NO.</th>
-                <th>단어명</th>
-                <th>빈도수</th>
+                <th style="width: 10%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: center;">Rank</th>
+                <th style="width: 60%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: center;">단어명</th>
+                <th style="width: 30%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: center;">빈도수</th>
             </tr>
         `;
 
@@ -474,17 +630,15 @@ let wordcloudsData = {
 
         if (data.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td colspan="3">No data available</td>
-            `;
+            row.innerHTML = `<td colspan="3" style="text-align: center;">No data available</td>`;
             tbody.appendChild(row);
         } else {
             data.forEach((item, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.단어명}</td>
-                    <td>${item.빈도수}</td>
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td style="text-align: center;">${item.단어명}</td>
+                    <td style="text-align: center;">${item.빈도수}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -492,74 +646,79 @@ let wordcloudsData = {
 
         table.appendChild(thead);
         table.appendChild(tbody);
+        tableContainer.appendChild(table);
 
-        return table;
+        return tableContainer;
     }
 
-
     function fetchWordFrequency() {
-    const start_period = document.getElementById('start_period').value;
-    const end_period = document.getElementById('end_period').value;
-    const category = document.getElementById('category').value;
+        const start_period = document.getElementById('start_period').value;
+        const end_period = document.getElementById('end_period').value;
+        const category = document.getElementById('category').value;
 
-    const data = { start_period, end_period, category };
+        const data = { start_period, end_period, category };
 
-    fetch('/review/get-word-frequency-by-price-range/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        console.log('Fetch successful', result); // Debugging
+        fetch('/review/get-word-frequency-by-price-range/', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            const tablesContainer = document.getElementById('wordFrequencyTables');
+            
+            // 기존 데이터를 초기화
+            tablesContainer.innerHTML = ''; 
 
-        const tablesContainer = document.getElementById('wordFrequencyTables');
-        tablesContainer.innerHTML = '';
+            // Flex 컨테이너로 설정하여 테이블을 수평으로 나열
+            tablesContainer.style.display = 'flex';
 
-        Object.keys(result).forEach(priceRange => {
-            const rangeData = result[priceRange];
+            Object.keys(result).forEach(priceRange => {
+                const rangeData = result[priceRange];
+                
+                // 무신사 스탠다드 테이블 생성
+                const musinsaData = rangeData.musinsa;
+                if (musinsaData) {
+                    const musinsaTable = createTable(priceRange, '무신사 스탠다드', musinsaData);
+                    tablesContainer.appendChild(musinsaTable);
+                }
 
-            const musinsaTable = createTable(priceRange, '무신사 스탠다드', rangeData.musinsa);
-            const spaTable = createTable(priceRange, 'SPA', rangeData.spa);
+                // SPA 테이블 생성
+                const spaData = rangeData.spa;
+                if (spaData) {
+                    const spaTable = createTable(priceRange, 'SPA', spaData);
+                    tablesContainer.appendChild(spaTable);
+                }
+            });
 
-            const rangeContainer = document.createElement('div');
-            rangeContainer.dataset.priceRange = priceRange;
-            rangeContainer.style.display = 'none'; // Start hidden
-            rangeContainer.style.justifyContent = 'space-between';
-            rangeContainer.style.marginBottom = '20px';
-            rangeContainer.appendChild(musinsaTable);
-            rangeContainer.appendChild(spaTable);
-
-            tablesContainer.appendChild(rangeContainer);
-        });
-
-        // Show the first price range by default
-        if (Object.keys(result).length > 0) {
+            // 첫 번째 가격대를 기본으로 표시
             showPriceRange(Object.keys(result)[0]);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
 
+    function showPriceRange(range) {
+        console.log('Showing range:', range);
+        const tables = document.querySelectorAll('#wordFrequencyTables > div');
 
-function showPriceRange(range) {
-    console.log('Showing range:', range);
-    const tables = document.querySelectorAll('#wordFrequencyTables > div');
-    tables.forEach(table => {
-        if (table.dataset.priceRange === range) {
-            table.style.display = 'flex';
-        } else {
-            table.style.display = 'none';
-        }
-    });
-}
-window.onload = function() {
-        fetchWordclouds(); // 페이지가 로드될 때 '월별' 버튼 클릭
+        tables.forEach(table => {
+            if (table.dataset.priceRange === range) {
+                table.style.display = 'block'; // 해당 가격대에 속하는 테이블을 모두 표시
+            } else {
+                table.style.display = 'none'; // 다른 가격대의 테이블은 숨김
+            }
+        });
+    }
+
+    window.onload = function() {
+        fetchData();
+        fetchWordclouds();
         fetchWordFrequency();
     };
-
-
 </script>
 {% endblock %}

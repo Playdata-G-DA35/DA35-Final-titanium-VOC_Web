@@ -3,40 +3,87 @@
 {% block title %}문의하기{% endblock %}
 
 {% block content %}
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-lg">
+    <div class="bg-white p-4 rounded-lg shadow-md w-full">
         <h1 class="text-2xl font-bold mb-4">문의하기</h1>
-        <form>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
-                    user 이름
+        <form class="w-full" id="questionForm">
+            <div class="mb-2">
+                <label class="block text-gray-700 text-sm font-bold mb-1" for="username">
+                    User
                 </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="000님">
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" name="username" type="text" placeholder="이름을 적어주세요." required>
             </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="brand">
+            <div class="mb-2">
+                <label class="block text-gray-700 text-sm font-bold mb-1" for="brand">
                     Brand
                 </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="brand" type="text" placeholder="무신사">
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="brand" name="brand" type="text" placeholder="무신사" required>
             </div>
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+            <div class="mb-2">
+                <label class="block text-gray-700 text-sm font-bold mb-1" for="email">
                     user-email
                 </label>
-                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" type="email" placeholder="email">
+                <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" name="email" type="email" placeholder="email" required>
             </div>
-            <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="message">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-1" for="message">
                     문의 내용
                 </label>
-                <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-48" id="message" name="message" placeholder="최대 500글자" maxlength="500" required></textarea>
+                <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-40" id="message" name="message" placeholder="최대 500글자" maxlength="500" required></textarea>
             </div>
             <div class="flex items-center justify-between">
-                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
+                <button class="bg-black hover:bg-black text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full" type="submit">
                     문의 전달하기
                 </button>
             </div>
         </form>
     </div>
-</body>
-</html>
+
+    <!-- 문의 완료 모달 -->
+    <div id="successModal" class="fixed z-50 inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <h2 class="text-2xl font-bold mb-4">문의가 완료되었습니다</h2>
+            <button id="closeModalBtn" class="bg-black hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                닫기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('questionForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value,
+                brand: document.getElementById('brand').value,
+                email: document.getElementById('email').value,
+                message: document.getElementById('message').value,
+            };
+
+            fetch("{% url 'question' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('successModal').classList.remove('hidden');
+                } else {
+                    alert('문의 등록에 실패했습니다. 다시 시도해주세요.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다. 다시 시도해주세요.');
+            });
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('successModal').classList.add('hidden');
+            window.location.href = "{% url 'main' %}"; // 메인 페이지로 리다이렉트
+        });
+    </script>
 {% endblock %}

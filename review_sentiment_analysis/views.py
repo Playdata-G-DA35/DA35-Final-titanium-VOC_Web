@@ -7,6 +7,7 @@ from django.shortcuts import render
 import json
 import datetime
 from review_basic_analysis.models import ProductDetails, ProductReview
+
 def custom_json_response(data, status=200):
     return HttpResponse(
         json.dumps(data, ensure_ascii=False),

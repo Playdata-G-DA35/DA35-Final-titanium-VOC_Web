@@ -1,41 +1,12 @@
 {% extends 'navi.html' %}
 
+{% load static %}
+
 {% block title %}상품 성과분석{% endblock %}
 
 {% block content %}
-{% load static %}
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-    }
-    .block {
-        border: 1px solid #ddd;
-        padding: 20px;
-        margin-top: 20px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-    th, td {
-        border: 1px solid #ddd;
-        padding: 10px;
-        text-align: center;
-    }
-    th {
-        background-color: #f4f4f4;
-        
-    }
-    .subcategory-group {
-        margin-top: 10px;
-        margin-bottom: 20px;
-    }
-    .subcategory-group label {
-        margin-right: 10px;
-    }
     .slider-container {
         margin: 20px 0;
         padding: 10px;
@@ -58,7 +29,7 @@
     }
     .slider-fill {
         height: 100%;
-        background-color: #007bff;
+        background-color: #fdfd96;
         position: absolute;
         left: 0;
         transition: width 0.3s ease;
@@ -67,7 +38,7 @@
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        background-color: #007bff;
+        background-color: #333;
         position: absolute;
         top: 50%;
         transform: translate(-50%, -50%);
@@ -75,415 +46,346 @@
         transition: left 0.3s ease;
     }
     .slider-thumb.positive {
-        background-color: lightgreen;
+        background-color: #007bff;
     }
     .slider-thumb.negative {
         background-color: lightcoral;
     }
-    .reviewtag-title {
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-    .purchase-reviews-container {
+    .subcategory-container {
         display: flex;
-        justify-content: space-between;
-    }
-    .review-tag-buttons {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(4, auto);
-        gap: 10px;
-        width: 250px;
-    }
-    .review-tag-button {
-        padding: 10px;
-        background-color: #f0f0f0;
-        border: 1px solid #ddd;
-        cursor: pointer;
-        text-align: center;
-    }
-    .review-tag-button.active {
-        background-color: #007bff;
-        color: white;
-    }
-    #review-tag-results {
-        flex-grow: 1;
-        margin-right: 20px;
-    }
-    /*테이블*/
-    /* 테이블 전체 스타일 */
-    #product-like-table {
-        width: 100%; /* 테이블이 부모 컨테이너의 전체 너비를 차지하도록 설정 */
-        border-collapse: collapse; /* 셀 경계가 서로 겹치지 않도록 설정 */
-        margin-bottom: 20px; /* 테이블 아래에 여백 추가 */
+        max-width: 60%; /* Adjust this value to fit your layout */
+        white-space: wrap;
+        gap: 8px; /* 항목 간의 간격을 추가 */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
     }
 
-    /* 테이블 헤더 스타일 */
-    #product-like-table th {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); /* 그라데이션 배경색 */
-        color: #fff; /* 헤더 텍스트 색상 */
-        padding: 12px 15px; /* 헤더 셀의 패딩 */
-        text-align: center; /* 헤더 텍스트 왼쪽 정렬 */
-        border-bottom: 3px solid #0056b3; /* 헤더 셀 하단에 경계선 추가 */
-        font-weight: bold; /* 헤더 텍스트 두껍게 */
+    .subcategory-item {
+        flex: 1 1 calc(33.33% - 8px); /* 한 줄에 3개씩 배치되도록 설정 */
+        margin-bottom: 8px; /* 하단 간격 추가 */
     }
 
-    /* 테이블 데이터 셀 스타일 */
-    #product-like-table td {
-        padding: 10px 15px; /* 데이터 셀의 패딩 */
-        border-bottom: 1px solid #dee2e6; /* 데이터 셀 하단에 경계선 추가 */
-        text-align: center; /* 데이터 텍스트 중앙 정렬 */
+    .likes-container {
+        display: flex;
+        align-items: flex-end; /* 좋아요를 아래쪽에 정렬 */
+        justify-content: flex-end; /* 좋아요를 오른쪽 정렬 */
+        margin-left: auto; /* 좋아요 부분을 오른쪽으로 밀기 */
     }
 
-    /* 테이블 행의 배경색 변경 */
-    #product-like-table tr:nth-child(even) {
-        background-color: #f9f9f9; /* 짝수 행 배경색 */
+    .category-icon {
+        width: 60px; /* 아이콘 크기를 더 크게 설정 */
+        height: 60px;
+        margin-right: 16px; /* 아이콘과 텍스트 사이의 간격 조정 */
     }
 
-    #product-like-table tr:hover {
-        background-color: #e9ecef; /* 마우스 오버 시 배경색 */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 마우스 오버 시 그림자 효과 */
+    .category-text-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: left; /* 텍스트를 왼쪽 정렬 */
     }
 
-    /* 상위 5개 상품 리스트 스타일 */
-    #top-like-products-list {
-        list-style-type: none; /* 기본 리스트 스타일 제거 */
-        padding: 0; /* 패딩 제거 */
-        margin: 0; /* 마진 제거 */
+    .flex-container {
+        display: flex;
+        flex-wrap: wrap; /* 줄바꿈 허용 */
+        width: 100%; /* 전체 너비를 사용 */
     }
 
-    #top-like-products-list li {
-        background: #fff; /* 리스트 항목 배경색 */
-        border: 1px solid #ddd; /* 리스트 항목 경계선 */
-        border-radius: 8px; /* 경계선 둥글게 처리 */
-        padding: 10px 15px; /* 리스트 항목 패딩 */
-        margin-bottom: 10px; /* 리스트 항목 사이에 여백 추가 */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 리스트 항목에 그림자 효과 추가 */
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* 전환 효과 추가 */
+    .likes-container {
+        display: flex;
+        align-items: flex-end; /* 좋아요를 아래쪽에 정렬 */
+        justify-content: flex-end; /* 좋아요를 오른쪽 정렬 */
+        margin-left: auto; /* 좋아요 부분을 오른쪽으로 밀기 */
+        width: 100%; /* 전체 너비를 사용 */
     }
-
-    #top-like-products-list li:hover {
-        transform: translateY(-4px); /* 마우스 오버 시 살짝 위로 이동 */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 마우스 오버 시 그림자 효과 강화 */
+    .category-text-container p {
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
-    #grade-average-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-
-    #grade-average-table th {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-        color: #fff;
-        padding: 12px 15px;
-        text-align: center;
-        border-bottom: 3px solid #0056b3;
-        font-weight: bold;
-    }
-
-    #grade-average-table td {
-        padding: 10px 15px;
-        border-bottom: 1px solid #dee2e6;
-        text-align: center;
-    }
-
-    #grade-average-table tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-
-    #grade-average-table tr:hover {
-        background-color: #e9ecef;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    #top-grade-products-list {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    #top-grade-products-list li {
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px 15px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    #top-grade-products-list li:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    /* 테이블 기본 스타일 */
-    #views-average-table, #age-group-table, #gender-distribution-table {
-        width: 100%; /* 테이블이 부모 컨테이너의 전체 너비를 차지하도록 설정 */
-        border-collapse: collapse; /* 셀 경계가 서로 겹치지 않도록 설정 */
-        margin-bottom: 20px; /* 테이블 아래에 여백 추가 */
-    }
-
-    /* 테이블 헤더 스타일 */
-    #views-average-table th, #age-group-table th, #gender-distribution-table th {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); /* 그라데이션 배경색 */
-        color: #fff; /* 헤더 텍스트 색상 */
-        padding: 12px 15px; /* 헤더 셀의 패딩 */
-        text-align: center; /* 헤더 텍스트 왼쪽 정렬 */
-        border-bottom: 3px solid #0056b3; /* 헤더 셀 하단에 경계선 추가 */
-        font-weight: bold; /* 헤더 텍스트 두껍게 */
-    }
-
-    /* 테이블 데이터 셀 스타일 */
-    #views-average-table td, #age-group-table td, #gender-distribution-table td {
-        padding: 10px 15px; /* 데이터 셀의 패딩 */
-        border-bottom: 1px solid #dee2e6; /* 데이터 셀 하단에 경계선 추가 */
-        text-align: center; /* 데이터 텍스트 중앙 정렬 */
-    }
-
-    /* 테이블 행의 배경색 변경 */
-    #views-average-table tr:nth-child(even), #age-group-table tr:nth-child(even), #gender-distribution-table tr:nth-child(even) {
-        background-color: #f9f9f9; /* 짝수 행 배경색 */
-    }
-
-    #views-average-table tr:hover, #age-group-table tr:hover, #gender-distribution-table tr:hover {
-        background-color: #e9ecef; /* 마우스 오버 시 배경색 */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 마우스 오버 시 그림자 효과 */
-    }
-
-    /* 상위 5개 상품 리스트 스타일 */
-    #top-views-products-list {
-        list-style-type: none; /* 기본 리스트 스타일 제거 */
-        padding: 0; /* 패딩 제거 */
-        margin: 0; /* 마진 제거 */
-    }
-
-    #top-views-products-list li {
-        background: #fff; /* 리스트 항목 배경색 */
-        border: 1px solid #ddd; /* 리스트 항목 경계선 */
-        border-radius: 8px; /* 경계선 둥글게 처리 */
-        padding: 10px 15px; /* 리스트 항목 패딩 */
-        margin-bottom: 10px; /* 리스트 항목 사이에 여백 추가 */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 리스트 항목에 그림자 효과 추가 */
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* 전환 효과 추가 */
-    }
-
-    #top-views-products-list li:hover {
-        transform: translateY(-4px); /* 마우스 오버 시 살짝 위로 이동 */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 마우스 오버 시 그림자 효과 강화 */
-    }
-    /* 테이블 기본 스타일 */
-    #purchases-average-table, #age-group-purchases-table, #gender-distribution-purchases-table {
-        width: 100%; /* 테이블이 부모 컨테이너의 전체 너비를 차지하도록 설정 */
-        border-collapse: collapse; /* 셀 경계가 서로 겹치지 않도록 설정 */
-        margin-bottom: 20px; /* 테이블 아래에 여백 추가 */
-    }
-
-    /* 테이블 헤더 스타일 */
-    #purchases-average-table th, #age-group-purchases-table th, #gender-distribution-purchases-table th {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); /* 그라데이션 배경색 */
-        color: #fff; /* 헤더 텍스트 색상 */
-        padding: 12px 15px; /* 헤더 셀의 패딩 */
-        text-align: center; /* 헤더 텍스트 왼쪽 정렬 */
-        border-bottom: 3px solid #0056b3; /* 헤더 셀 하단에 경계선 추가 */
-        font-weight: bold; /* 헤더 텍스트 두껍게 */
-    }
-
-    /* 테이블 데이터 셀 스타일 */
-    #purchases-average-table td, #age-group-purchases-table td, #gender-distribution-purchases-table td {
-        padding: 10px 15px; /* 데이터 셀의 패딩 */
-        border-bottom: 1px solid #dee2e6; /* 데이터 셀 하단에 경계선 추가 */
-        text-align: center; /* 데이터 텍스트 중앙 정렬 */
-    }
-
-    /* 테이블 행의 배경색 변경 */
-    #purchases-average-table tr:nth-child(even), #age-group-purchases-table tr:nth-child(even), #gender-distribution-purchases-table tr:nth-child(even) {
-        background-color: #f9f9f9; /* 짝수 행 배경색 */
-    }
-
-    #purchases-average-table tr:hover, #age-group-purchases-table tr:hover, #gender-distribution-purchases-table tr:hover {
-        background-color: #e9ecef; /* 마우스 오버 시 배경색 */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 마우스 오버 시 그림자 효과 */
-    }
-
-    /* 상위 5개 상품 리스트 스타일 */
-    #top-purchases-products-list {
-        list-style-type: none; /* 기본 리스트 스타일 제거 */
-        padding: 0; /* 패딩 제거 */
-        margin: 0; /* 마진 제거 */
-    }
-
-    #top-purchases-products-list li {
-        background: #fff; /* 리스트 항목 배경색 */
-        border: 1px solid #ddd; /* 리스트 항목 경계선 */
-        border-radius: 8px; /* 경계선 둥글게 처리 */
-        padding: 10px 15px; /* 리스트 항목 패딩 */
-        margin-bottom: 10px; /* 리스트 항목 사이에 여백 추가 */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 리스트 항목에 그림자 효과 추가 */
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* 전환 효과 추가 */
-    }
-
-    #top-purchases-products-list li:hover {
-        transform: translateY(-4px); /* 마우스 오버 시 살짝 위로 이동 */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 마우스 오버 시 그림자 효과 강화 */
-    }
-
 </style>
-</head>
-<body>
-    <h1 class="font-bold bg-gray-300 p-2 text-left text-2xl box2 mb-4">상품성과분석</h1>
-    <section class="card bg-white shadow-md rounded-md p-4 mb-5">   
-        <form id="filterForm">
-            <label for="category">Category:</label>
-            <select id="category" name="category" onchange="updateSubcategories()" required>
-                <option value="">카테고리 선택</option>
-                <option value="상의">상의</option>
-                <option value="바지">바지</option>
-                <option value="아우터">아우터</option>
-            </select>
-            <button type="button" onclick="applyFilters()" class="px-3 py-1.5 bg-blue-500 text-white text-sm font-semibold rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                적용
-            </button>
-    
-            <div id="subcategory-container" class="subcategory-group">
-                <!-- Subcategory 체크박스가 여기에 동적으로 삽입됩니다 -->
-            </div>
-        </form>
-    </section>
-    
-    <section class="card bg-white shadow-md rounded-md p-4 mb-5">
-        <!-- Product Likes Section -->
-        <div class="block" id="product-like-results">
-            <h2>상품 좋아요 분석</h2>
-            <div id="product-like-table">
-                <!-- Product Like 테이블이 여기에 삽입됩니다 -->
-            </div>
-            <div id="top-like-products">
-                <h3>상위5개 상품좋아요</h3>
-                <ul id="top-like-products-list">
-                    <!-- 상위 5개 상품명이 여기에 삽입됩니다 -->
-                </ul>
-            </div>
-        </div>
-    </section>
-    <section class="card bg-white shadow-md rounded-md p-4 mb-5">
-        <!-- Grade Average Section -->
-        <div class="block" id="grade-average-results">
-            <h2>Grade Average Analysis</h2>
-            <div id="grade-average-table">
-                <!-- Grade Average 테이블이 여기에 삽입됩니다 -->
-            </div>
-            <div id="top-grade-products">
-                <h3>Top 5 Products by Grades</h3>
-                <ul id="top-grade-products-list">
-                    <!-- 상위 5개 상품명이 여기에 삽입됩니다 -->
-                </ul>
-            </div>
-        </div>
-    </section>
-    <section class="card bg-white shadow-md rounded-md p-4 mb-5">
-        <!-- Views, Age Group, and Gender Distribution Section -->
-        <div class="block" id="views-and-demographics-results">
-            <h2>Views and Demographics Analysis</h2>
-            <div id="views-average-table">
-                <!-- Views Average 테이블이 여기에 삽입됩니다 -->
-            </div>
-            <div id="top-views-products">
-                <h3>Top 5 Products by Views</h3>
-                <ul id="top-views-products-list">
-                    <!-- 상위 5개 상품명이 여기에 삽입됩니다 -->
-                </ul>
-            </div>
-            <div id="age-group-table">
-                <!-- Age Group 테이블이 여기에 삽입됩니다 -->
-            </div>
-            <div id="gender-distribution-table">
-                <!-- Gender Distribution 테이블이 여기에 삽입됩니다 -->
-            </div>
-        </div>
-    </section>
-    <section class="card bg-white shadow-md rounded-md p-4 mb-5">
-        <!-- Purchases Section -->
-        <div class="block" id="purchases-results">
-            <h2>Purchases Analysis</h2>
-            <div id="purchases-average-table">
-                <!-- Purchases Average 테이블이 여기에 삽입됩니다 -->
-            </div>
-            <div id="top-purchases-products">
-                <h3>Top 5 Products by Purchases</h3>
-                <ul id="top-purchases-products-list">
-                    <!-- 상위 5개 상품명이 여기에 삽입됩니다 -->
-                </ul>
-            </div>
-            <div id="age-group-purchases-table">
-                <!-- Age Group Purchases 테이블이 여기에 삽입됩니다 -->
-            </div>
-            <div id="gender-distribution-purchases-table">
-                <!-- Gender Distribution Purchases 테이블이 여기에 삽입됩니다 -->
-            </div>
-        </div>
-    </section>
-    <section class="card bg-white shadow-md rounded-md p-4 mb-5">
-        <!-- Purchase Reviews by Category Section -->
-        <div class="block" id="purchase-reviews-by-category">
-            <h2>Purchase Reviews by Category</h2>
-            <div class="purchase-reviews-container">
-                <div id="review-tag-results">
-                    <!-- Review Tag 분석 결과가 여기에 삽입됩니다 -->
+
+<div class="flex flex-col min-h-screen">
+    <div class="container mx-auto p-4">
+        <!-- 상품 성과분석 헤더 -->
+        <section class="bg-black p-2 rounded-lg shadow-md mb-6">
+            <h2 class="font-bold text-lg text-white">상품 분석 > 상품 성과분석</h2>
+        </section>
+
+        <!-- 필터 폼 -->
+        <section class="bg-white p-4 rounded-lg shadow-md mb-6">
+            <form id="filterForm" class="flex items-center space-x-4">
+                <div class="flex-1" style="flex-basis: 76%;">
+                    <label for="category" class="block text-sm font-medium text-gray-700">카테고리:</label>
+                    <select id="category" name="category" onchange="updateSubcategories(); updateCategoryIcon();" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="">카테고리 선택</option>
+                        <option value="상의">상의</option>
+                        <option value="바지">바지</option>
+                        <option value="아우터">아우터</option>
+                    </select>
                 </div>
-                <div class="review-tag-buttons">
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('size')">Size</button>
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('brightness')">Brightness</button>
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('color')">Color</button>
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('thickness')">Thickness</button>
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('warmth')">Warmth</button>
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('weight')">Weight</button>
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('delivery')">Delivery</button>
-                    <button class="review-tag-button" onclick="fetchPurchaseReviews('packaging')">Packaging</button>
+                <div class="flex-1" style="flex-basis: 24%;">
+                    <button type="button" onclick="applyFilters()" class="w-full text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" style="background-color: rgba(253, 253, 150, 0.5);">
+                        적용
+                    </button>
+                </div>
+            </form>
+            <div id="subcategory-container" class="subcategory-group mt-4" style="display: none;">
+                <label class="block text-sm font-medium text-gray-700 mb-2">하위 카테고리:</label>
+                <div id="subcategory-checkboxes" class="flex flex-wrap gap-4">
+                    <!-- Subcategory 체크박스가 여기에 동적으로 삽입됩니다 -->
                 </div>
             </div>
+        </section>
+
+        <!-- 전체 컨테이너 -->
+        <div class="flex space-x-4 mb-6">
+            <!-- 카테고리 정보 박스 -->
+            <section class="bg-white p-4 rounded-lg shadow-md flex-none" style="flex-basis: 40%;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-500 mb-2">하위 카테고리별 평균 좋아요</h3>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        기간 전체
+                    </div>
+                </div>
+                <div class="flex items-start" style="margin-top: 40px;">
+                    <!-- 카테고리 아이콘 -->
+                    <img id="category-icon" src="" alt="카테고리 아이콘" class="category-icon mr-2">
+                    
+                    <!-- 카테고리 텍스트와 하위 카테고리 -->
+                    <div class="category-text-container">
+                        <p id="product-category" class="font-bold text-lg"></p>
+                        <p id="subcategory-names" class="text-sm text-gray-500" style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word;"></p> 
+                    </div>
+                </div>
+                
+                <!-- 좋아요 부분 -->
+                <div class="likes-container mt-4">
+                    <p class="flex items-center font-bold text-xl">
+                        <span style="color: #fdfd96; font-size: 1.5rem; margin-right: 0.5rem;">&#x2764;</span>
+                        평균 좋아요 <span id="average-likes" style="margin-left: 8px;"></span>
+                    </p>
+                </div>
+            </section>
+
+            <!-- 상위 제품 목록 박스 -->
+            <section class="bg-white p-4 rounded-lg shadow-md flex-none" style="flex-basis: 60%;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-500 mb-2">상위 좋아요 상품</h3>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        기간 전체
+                    </div>
+                </div>
+                <table class="w-full" style="table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: center;">Rank</th>
+                            <th style="width: 90%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: left;">상품명</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-products"></tbody>
+                </table>
+            </section>
         </div>
-    </section>
+
+        <!-- 전체 컨테이너 -->
+        <div class="flex space-x-4 mb-6">
+            <!-- 카테고리 정보 박스 -->
+            <section class="bg-white p-4 rounded-lg shadow-md flex-none" style="flex-basis: 40%;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-500 mb-2">하위 카테고리별 평균 평점</h3>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        기간 전체
+                    </div>
+                </div>
+                <div class="flex items-start" style="margin-top: 40px;">
+                    <!-- 카테고리 아이콘 -->
+                    <img id="grade-category-icon" src="" alt="카테고리 아이콘" class="category-icon mr-2">
+                    
+                    <!-- 카테고리 텍스트와 하위 카테고리 -->
+                    <div class="category-text-container">
+                        <p id="grade-product-category" class="font-bold text-lg"></p>
+                        <p id="grade-subcategory-names" class="text-sm text-gray-500" style="white-space: normal; word-wrap: break-word; overflow-wrap: break-word;"></p> 
+                    </div>
+                </div>
+                
+                <!-- 평점 부분 -->
+                <div class="likes-container mt-4">
+                    <p class="flex items-center font-bold text-xl">
+                        <span style="color: #fdfd96; font-size: 1.5rem; margin-right: 0.5rem;">★</span>
+                        평균 평점 <span id="average-grade" style="margin-left: 8px;"></span>
+                    </p>
+                </div>
+            </section>
+
+            <!-- 상위 제품 목록 박스 -->
+            <section class="bg-white p-4 rounded-lg shadow-md flex-none" style="flex-basis: 60%;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-500 mb-2">상위 평점 상품</h3>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        기간 전체
+                    </div>
+                </div>
+                <table class="w-full" style="table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: center;">Rank</th>
+                            <th style="width: 90%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: left;">상품명</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-grade-products"></tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- 하위 카테고리 조회수 및 구매수 분석 -->
+        <div class="flex space-x-4 mb-6">
+            <!-- 연령대별 분석-->
+            <section class="bg-white p-4 rounded-lg shadow-md flex-none" style="flex-basis: 60%;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-500 mb-2">하위 카테고리 연령대별 조회수 및 구매수 분석</h3>
+                    <div class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                        기간 전체
+                    </div>
+                </div>
+                <div class="flex items-start" style="margin-top: 20px;">
+                    <div class="w-full">
+                        <canvas id="ageGroupChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 성별 분석 -->
+            <section class="bg-white p-4 rounded-lg shadow-md flex-none" style="flex-basis: 40%;">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-sm text-gray-500">하위 카테고리 성별 조회수 및 구매수 분석</h3>
+                    <div>
+                        <button id="viewsGenderBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                            조회수
+                        </button>
+                        <button id="purchasesGenderBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                            구매수
+                        </button>
+                    </div>
+                </div>
+                <div class="w-full" style="height: 200px;">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </section>
+        </div>
+
+        <!-- 상위 상품 - 조회수 및 구매수 -->
+        <div class="flex space-x-4 mb-6">
+            <section class="bg-white p-4 rounded-lg shadow-md flex-none" style="flex-basis: 100%;">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-sm text-gray-500">상위 조회수 및 구매수 상품</h3>
+                    <div>
+                        <button id="viewsProductsBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                            조회수
+                        </button>
+                        <button id="purchasesProductsBtn" class="bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
+                            구매수
+                        </button>
+                    </div>
+                </div>
+                <table class="w-full" style="table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: center;">Rank</th>
+                            <th style="width: 90%; background-color: rgba(253, 253, 150, 0.5); color: black; text-align: left;">상품명</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsTable"></tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- 리뷰 태그 분포 -->
+        <section class="bg-white p-4 rounded-lg shadow-md mb-6">
+            <h2 class="font-bold text-sm text-gray-500 mb-4">리뷰 태그 분석</h2>
+            <div class="flex justify-between">
+                <div id="review-tag-results" class="flex-1 mr-4"></div>
+                <div class="review-tag-buttons grid grid-cols-2 gap-2">
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('size')">사이즈</button>
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('brightness')">밝기</button>
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('color')">색감</button>
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('thickness')">두께감</button>
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('warmth')">보온성</button>
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('weight')">무게감</button>
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('delivery')">배송</button>
+                    <button class="review-tag-button bg-gray-300 text-xs text-black font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;" onclick="fetchPurchaseReviews('packaging')">포장</button>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
 <script>
     const subcategories = {
         "상의": ["민소매/반소매/카라 티셔츠", "맨투맨/니트/스웨트", "긴소매 티셔츠", "셔츠/블라우스"],
         "바지": ["데님 팬츠", "숏 팬츠", "슈트 팬츠/슬랙스", "기타 바지"],
         "아우터": ["나일론/코치", "아노락 재킷", "후드 집업", "겨울 코트", "슈트/ 블레이저 재킷", 
-                   "숏패딩/헤비 아우터", "플리스/뽀글이/기타 아우터", "블루종/트러커 재킷", "베스트/카디건"]
+                "숏패딩/헤비 아우터", "플리스/뽀글이/기타 아우터", "블루종/트러커 재킷", "베스트/카디건"]
+    };
+
+    const categoryIcons = {
+        "상의": "https://cdn-icons-png.flaticon.com/512/892/892458.png",
+        "바지": "https://cdn-icons-png.flaticon.com/512/892/892459.png",
+        "아우터": "https://cdn-icons-png.flaticon.com/512/3194/3194719.png"
     };
 
     const reviewTagLabels = {
-        size: { positive: '사이즈가 커요', negative: '사이즈가 작아요' },
-        brightness: { positive: '밝기 밝아요', negative: '밝기 어두워요' },
-        color: { positive: '색감 선명해요', negative: '색감 흐려요' },
-        thickness: { positive: '두께감 두꺼워요', negative: '두께감 얇아요' },
-        warmth: { positive: '보온성 따뜻해요', negative: '보온성 약해요' },
-        weight: { positive: '무게감 무거워요', negative: '무게감 가벼워요' },
-        delivery: { positive: '배송 빨라요', negative: '배송 느려요' },
-        packaging: { positive: '포장 꼼꼼해요', negative: '포장 아쉬워요' }
+        size: { positive: '<strong>사이즈가 커요</strong>', negative: '<strong>사이즈가 작아요</strong>' },
+        brightness: { positive: '<strong>밝기 밝아요</strong>', negative: '<strong>밝기 어두워요</strong>' },
+        color: { positive: '<strong>색감 선명해요</strong>', negative: '<strong>색감 흐려요</strong>' },
+        thickness: { positive: '<strong>두께감 두꺼워요</strong>', negative: '<strong>두께감 얇아요</strong>' },
+        warmth: { positive: '<strong>보온성 따뜻해요</strong>', negative: '<strong>보온성 약해요</strong>' },
+        weight: { positive: '<strong>무게감 무거워요</strong>', negative: '<strong>무게감 가벼워요</strong>' },
+        delivery: { positive: '<strong>배송 빨라요</strong>', negative: '<strong>배송 느려요</strong>' },
+        packaging: { positive: '<strong>포장 꼼꼼해요</strong>', negative: '<strong>포장 아쉬워요</strong>' }
     };
 
     function updateSubcategories() {
         const category = document.getElementById('category').value;
         const subcategoryContainer = document.getElementById('subcategory-container');
+        const subcategoryCheckboxes = document.getElementById('subcategory-checkboxes');
         
-        // Clear previous subcategory checkboxes
-        subcategoryContainer.innerHTML = '';
+        // 하위 카테고리 컨테이너를 초기에 숨김
+        subcategoryContainer.style.display = 'none';
+        subcategoryCheckboxes.innerHTML = '';
 
         if (category && subcategories[category]) {
-            subcategories[category].forEach(subcategory => {
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.name = 'subcategory';
-                checkbox.value = subcategory;
-                checkbox.id = subcategory;
-
-                const label = document.createElement('label');
-                label.htmlFor = subcategory;
-                label.textContent = subcategory;
-
-                subcategoryContainer.appendChild(checkbox);
-                subcategoryContainer.appendChild(label);
+            subcategories[category].forEach((subcategory, index) => {
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'flex items-center';
+                checkboxDiv.innerHTML = `
+                    <input id="subcategory-${index}" name="subcategory" type="checkbox" value="${subcategory}" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="subcategory-${index}" class="ml-2 block text-sm text-gray-900">
+                        ${subcategory}
+                    </label>
+                `;
+                subcategoryCheckboxes.appendChild(checkboxDiv);
             });
+
+            // 하위 카테고리가 있을 때만 컨테이너를 표시
+            subcategoryContainer.style.display = 'block';
+        }
+    }
+
+    function updateCategoryIcon() {
+        const category = document.getElementById('category').value;
+        const iconElement = document.getElementById('category-icon');
+
+        if (category && categoryIcons[category]) {
+            iconElement.src = categoryIcons[category];
+            iconElement.alt = `${category} 아이콘`;
+        } else {
+            iconElement.src = "";
+            iconElement.alt = "카테고리 아이콘";
         }
     }
 
@@ -491,23 +393,41 @@
         const category = document.getElementById('category').value;
         const selectedSubcategories = Array.from(document.querySelectorAll('input[name="subcategory"]:checked')).map(cb => cb.value);
 
-        const data = { category, subcategory: selectedSubcategories };
+        // 선택된 서브카테고리가 없으면 전체 서브카테고리를 사용
+        const subcategory = selectedSubcategories.length > 0 ? selectedSubcategories : subcategories[category];
+
+        const data = { category, subcategory };
+        console.log('Applying filters with data:', data);
+
+        // Update icon based on selected category
+        updateCategoryIcon();
 
         fetchProductLikes(data);
         fetchGradeAverages(data);
-        fetchViewsAverage(data);
-        fetchPurchasesData(data);
+        fetchViewsAndPurchases(data);
     }
 
     function fetchProductLikes(data) {
+        console.log('Sending data to server:', data);
         fetch('/product_performance_analysis/product-performance-analysis/likes/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
         .then(response => response.json())
-        .then(data => renderProductLikeResults(data))
-        .catch(error => console.error('Error:', error));
+        .then(data => {
+            console.log('Received product likes data:', data);
+            const productData = data[0]; 
+            console.log('First item:', productData);
+            console.log('Average likes:', productData.average_like);
+
+            document.getElementById('subcategory-names').textContent = productData.subcategory; 
+            displayData('product-like-data', data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('데이터를 가져오는 중 오류가 발생했습니다.');
+        });
     }
 
     function fetchGradeAverages(data) {
@@ -517,29 +437,26 @@
             body: JSON.stringify(data)
         })
         .then(response => response.json())
-        .then(data => renderGradeAverageResults(data))
+        .then(data => displayData('grade-average-data', data))
         .catch(error => console.error('Error:', error));
     }
 
-    function fetchViewsAverage(data) {
-        fetch('/product_performance_analysis/product-performance-analysis/views/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+    function fetchViewsAndPurchases(data) {
+        Promise.all([
+            fetch('/product_performance_analysis/product-performance-analysis/views/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(response => response.json()),
+            fetch('/product_performance_analysis/product-performance-analysis/purchases/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(response => response.json())
+        ])
+        .then(([viewsData, purchasesData]) => {
+            displayViewsAndPurchases(viewsData, purchasesData);
         })
-        .then(response => response.json())
-        .then(data => renderViewsAndDemographicsResults(data))
-        .catch(error => console.error('Error:', error));
-    }
-
-    function fetchPurchasesData(data) {
-        fetch('/product_performance_analysis/product-performance-analysis/purchases/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => renderPurchasesResults(data))
         .catch(error => console.error('Error:', error));
     }
 
@@ -556,12 +473,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ category: category, reviewtags: [reviewTag] })
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             renderReviewTagResult(reviewTag, data[reviewTag]);
             updateActiveButton(reviewTag);
@@ -572,192 +484,158 @@
         });
     }
 
-    function renderProductLikeResults(data) {
-    const resultsDiv = document.getElementById('product-like-table');
-    let html = '<table>';
-    html += '<thead><tr><th>Category</th><th>Subcategory</th><th>Brand</th><th>Product Likes</th></tr></thead>';
-    html += '<tbody>';
-    
-    data.forEach(item => {
-        html += `<tr>
-                    <td>${item.category}</td>
-                    <td>${item.subcategory}</td>
-                    <td>${item.brand}</td>
-                    <td>${item.average_like !== undefined ? item.average_like : 'N/A'}</td>
-                </tr>`;
-        
-        // 상위 5개 상품의 좋아요 수를 업데이트합니다.
-        renderTopProducts(item.top_products, 'top-like-products-list');
-    });
+    function renderReviewTagResult(tag, score) {
+        const resultsDiv = document.getElementById('review-tag-results');
+        const visualClass = score > 0 ? 'positive' : (score < 0 ? 'negative' : '');
+        const sliderPosition = ((score + 1) / 2) * 100;
+        const labels = reviewTagLabels[tag];
 
-    html += '</tbody></table>';
-    resultsDiv.innerHTML = html;
-}
+        resultsDiv.innerHTML = `
+            <div class="reviewtag-result">
+                <div class="reviewtag-title">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
+                <div class="slider-container">
+                    <div class="slider-labels">
+                        <span>${labels.negative}</span>
+                        <span><strong>보통</strong></span>
+                        <span>${labels.positive}</span>
+                    </div>
+                    <div class="slider-track">
+                        <div class="slider-fill" style="width: ${sliderPosition}%;"></div>
+                        <div class="slider-thumb ${visualClass}" style="left: ${sliderPosition}%;"></div>
+                    </div>
+                </div>
+            </div>`;
+    }
+    function fetchPurchasesData(data) {
+        fetch('/product_performance_analysis/product-performance-analysis/purchases/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => displayData('purchases-data', data))
+        .catch(error => console.error('Error:', error));
+    }
 
-function renderTopProducts(topProducts, listId) {
-    const listContainer = document.getElementById(listId);
-    let html = '<ul>';
-    
-    // 상위 5개 상품의 정보 표시
-    topProducts.slice(0, 5).forEach(product => {
-        html += `<li>
-                    <span>${product.name}</span> - <span>${product.likes !== undefined ? product.likes : 'N/A'}</span> likes
-                </li>`;
-    });
-    
-    html += '</ul>';
-    listContainer.innerHTML = html;
-}
+    function fetchPurchaseReviews(reviewTag) {
+        const category = document.getElementById('category').value;
 
-    function renderGradeAverageResults(data) {
-        const resultsDiv = document.getElementById('grade-average-table');
-        let html = '<table>';
-        html += '<thead><tr><th>Category</th><th>Subcategory</th><th>Brand</th><th>Average Grade</th></tr></thead>';
-        html += '<tbody>';
-        
-        data.forEach(item => {
-            html += `<tr>
-                        <td>${item.category}</td>
-                        <td>${item.subcategory}</td>
-                        <td>${item.brand}</td>
-                        <td>${item.average_grade.toFixed(2)}</td>
-                    </tr>`;
-            renderTopProducts(item.top_products, 'top-grade-products-list');
+        if (!category) {
+            alert('카테고리를 선택해주세요.');
+            return;
+        }
+
+        fetch('/product_performance_analysis/product-performance-analysis/purchase-reviews/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ category: category, reviewtags: [reviewTag] })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data[reviewTag] !== undefined) {
+                renderReviewTagResult(reviewTag, data[reviewTag]);
+                updateActiveButton(reviewTag);
+            } else {
+                console.error('Invalid data format:', data);
+                alert('리뷰 데이터 형식이 올바르지 않습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('리뷰 데이터를 가져오는 중 오류가 발생했습니다.');
         });
-
-        html += '</tbody></table>';
-        resultsDiv.innerHTML = html;
     }
 
-    function renderViewsAndDemographicsResults(data) {
-        const viewsResultsDiv = document.getElementById('views-average-table');
-        let viewsHtml = '<table>';
-        viewsHtml += '<thead><tr><th>Category</th><th>Subcategory</th><th>Average Views</th></tr></thead>';
-        viewsHtml += '<tbody>';
-        viewsHtml += `<tr>
-                        <td>${data.category}</td>
-                        <td>${data.subcategories}</td>
-                        <td>${data.average_views}</td>
-                      </tr>`;
-        viewsHtml += '</tbody></table>';
-        viewsResultsDiv.innerHTML = viewsHtml;
-
-        renderTopProducts(data.top_products, 'top-views-products-list');
-
-        const ageGroupResultsDiv = document.getElementById('age-group-table');
-        let ageGroupHtml = '<table>';
-        ageGroupHtml += '<thead><tr><th>Age Group</th><th>Views</th></tr></thead>';
-        ageGroupHtml += '<tbody>';
-        for (const [ageGroup, views] of Object.entries(data.age_groups)) {
-            ageGroupHtml += `<tr>
-                                <td>${ageGroup.replace('views_', '')}</td>
-                                <td>${views}</td>
-                            </tr>`;
+    function displayData(elementId, data) {
+        if (elementId === 'product-like-data') {
+            const productData = (data && data.length > 0 && data[0]) ? data[0] : null;
+            if (productData) {
+                document.getElementById('product-category').textContent = `${productData.category} >`;
+                const categoryIconElement = document.getElementById('category-icon');
+                if (categoryIcons[productData.category]) {
+                    categoryIconElement.src = categoryIcons[productData.category];
+                    categoryIconElement.alt = `${productData.category} 아이콘`;
+                }
+                document.getElementById('average-likes').textContent = productData.average_like.toLocaleString();
+                const topProductsTable = document.getElementById('top-products');
+                if (productData.top_products && productData.top_products.length > 0) {
+                    topProductsTable.innerHTML = productData.top_products.map((product, index) => `
+                        <tr>
+                            <td style="text-align: center;">${index + 1}</td>
+                            <td>${product}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    topProductsTable.innerHTML = '<tr><td colspan="2" style="text-align: center;">상위 제품 없음</td></tr>';
+                }
+            } else {
+                console.error('Product data is undefined or malformed.');
+                document.getElementById('product-category').textContent = '데이터 없음';
+                document.getElementById('average-likes').textContent = '0';
+                document.getElementById('top-products').innerHTML = '<tr><td colspan="2" style="text-align: center;">데이터 없음</td></tr>';
+            }
+        } else if (elementId === 'grade-average-data') {
+            const gradeData = (data && data.length > 0) ? data[0] : null;
+            if (gradeData) {
+                document.getElementById('grade-product-category').textContent = `${gradeData.category} >`;
+                const gradeSubcategoryNamesElement = document.getElementById('grade-subcategory-names');
+                if (gradeData.subcategory) {
+                    const subcategories = gradeData.subcategory.split(',').map(sub => sub.trim());
+                    gradeSubcategoryNamesElement.innerHTML = subcategories.join(', ');
+                } else {
+                    gradeSubcategoryNamesElement.textContent = '하위 카테고리 없음';
+                }
+                const gradeCategoryIconElement = document.getElementById('grade-category-icon');
+                if (categoryIcons[gradeData.category]) {
+                    gradeCategoryIconElement.src = categoryIcons[gradeData.category];
+                    gradeCategoryIconElement.alt = `${gradeData.category} 아이콘`;
+                }
+                document.getElementById('average-grade').textContent = gradeData.average_grade.toFixed(2);
+                const topGradeProductsTable = document.getElementById('top-grade-products');
+                if (gradeData.top_products && gradeData.top_products.length > 0) {
+                    topGradeProductsTable.innerHTML = gradeData.top_products.map((product, index) => `
+                        <tr>
+                            <td style="text-align: center;">${index + 1}</td>
+                            <td>${product}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    topGradeProductsTable.innerHTML = '<tr><td colspan="2" style="text-align: center;">상위 제품 없음</td></tr>';
+                }
+            } else {
+                console.error('Grade data is undefined or malformed.');
+                document.getElementById('grade-product-category').textContent = '데이터 없음';
+                document.getElementById('average-grade').textContent = '0';
+                document.getElementById('top-grade-products').innerHTML = '<tr><td colspan="2" style="text-align: center;">데이터 없음</td></tr>';
+            }
+        } else {
+            const container = document.getElementById(elementId);
+            container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
         }
-        ageGroupHtml += '</tbody></table>';
-        ageGroupResultsDiv.innerHTML = ageGroupHtml;
-        const genderResultsDiv = document.getElementById('gender-distribution-table');
-        let genderHtml = '<table>';
-        genderHtml += '<thead><tr><th>Gender</th><th>Views</th><th>Ratio (%)</th></tr></thead>';
-        genderHtml += '<tbody>';
-        genderHtml += `<tr>
-                        <td>Male</td>
-                        <td>${data.gender_views.views_male}</td>
-                        <td>${data.gender_views.male_ratio}</td>
-                      </tr>`;
-        genderHtml += `<tr>
-                        <td>Female</td>
-                        <td>${data.gender_views.views_female}</td>
-                        <td>${data.gender_views.female_ratio}</td>
-                      </tr>`;
-        genderHtml += '</tbody></table>';
-        genderResultsDiv.innerHTML = genderHtml;
-    }
-
-    function renderPurchasesResults(data) {
-        const purchasesResultsDiv = document.getElementById('purchases-average-table');
-        let purchasesHtml = '<table>';
-        purchasesHtml += '<thead><tr><th>Category</th><th>Subcategory</th><th>Average Purchases</th></tr></thead>';
-        purchasesHtml += '<tbody>';
-        purchasesHtml += `<tr>
-                            <td>${data.category}</td>
-                            <td>${data.subcategories}</td>
-                            <td>${data.average_purchases}</td>
-                          </tr>`;
-        purchasesHtml += '</tbody></table>';
-        purchasesResultsDiv.innerHTML = purchasesHtml;
-
-        renderTopProducts(data.top_products, 'top-purchases-products-list');
-
-        const ageGroupPurchasesResultsDiv = document.getElementById('age-group-purchases-table');
-        let ageGroupPurchasesHtml = '<table>';
-        ageGroupPurchasesHtml += '<thead><tr><th>Age Group</th><th>Purchases</th></tr></thead>';
-        ageGroupPurchasesHtml += '<tbody>';
-        for (const [ageGroup, purchases] of Object.entries(data.age_groups)) {
-            ageGroupPurchasesHtml += `<tr>
-                                        <td>${ageGroup.replace('purchases_', '')}</td>
-                                        <td>${purchases}</td>
-                                      </tr>`;
-        }
-        ageGroupPurchasesHtml += '</tbody></table>';
-        ageGroupPurchasesResultsDiv.innerHTML = ageGroupPurchasesHtml;
-
-        const genderPurchasesResultsDiv = document.getElementById('gender-distribution-purchases-table');
-        let genderPurchasesHtml = '<table>';
-        genderPurchasesHtml += '<thead><tr><th>Gender</th><th>Purchases</th><th>Ratio (%)</th></tr></thead>';
-        genderPurchasesHtml += '<tbody>';
-        genderPurchasesHtml += `<tr>
-                                  <td>Male</td>
-                                  <td>${data.gender_purchases.purchases_male}</td>
-                                  <td>${data.gender_purchases.male_ratio}</td>
-                                </tr>`;
-        genderPurchasesHtml += `<tr>
-                                  <td>Female</td>
-                                  <td>${data.gender_purchases.purchases_female}</td>
-                                  <td>${data.gender_purchases.female_ratio}</td>
-                                </tr>`;
-        genderPurchasesHtml += '</tbody></table>';
-        genderPurchasesResultsDiv.innerHTML = genderPurchasesHtml;
     }
 
     function renderReviewTagResult(tag, score) {
-    const resultsDiv = document.getElementById('review-tag-results');
-    const visualClass = score > 0 ? 'positive' : (score < 0 ? 'negative' : '');
-    const sliderPosition = ((score + 1) / 2) * 100;
-    const labels = reviewTagLabels[tag];
+        const resultsDiv = document.getElementById('review-tag-results');
+        const visualClass = score > 0 ? 'positive' : (score < 0 ? 'negative' : '');
+        const sliderPosition = ((score + 1) / 2) * 100;
+        const labels = reviewTagLabels[tag];
 
-    resultsDiv.innerHTML = `
-        <div class="reviewtag-result">
-            <div class="reviewtag-title">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
-            <div class="slider-container">
-                <div class="slider-labels">
-                    <span>${labels.negative}</span>
-                    <span>보통</span>
-                    <span>${labels.positive}</span>
+        resultsDiv.innerHTML = `
+            <div class="reviewtag-result">
+                <div class="reviewtag-title">${tag.charAt(0).toUpperCase() + tag.slice(1)}</div>
+                <div class="slider-container">
+                    <div class="slider-labels">
+                        <span>${labels.negative}</span>
+                        <span><strong>보통</strong></span>
+                        <span>${labels.positive}</span>
+                    </div>
+                    <div class="slider-track">
+                        <div class="slider-fill" style="width: ${sliderPosition}%;"></div>
+                        <div class="slider-thumb ${visualClass}" style="left: ${sliderPosition}%;"></div>
+                    </div>
                 </div>
-                <div class="slider-track">
-                    <div class="slider-fill" style="width: ${sliderPosition}%;"></div>
-                    <div class="slider-thumb ${visualClass}" style="left: ${sliderPosition}%;"></div>
-                </div>
-            </div>
-        </div>`;
-
-    // 슬라이더 썸 위치 조정을 위한 setTimeout
-    setTimeout(() => {
-        const thumb = document.querySelector('.slider-thumb');
-        const track = document.querySelector('.slider-track');
-        const thumbRect = thumb.getBoundingClientRect();
-        const trackRect = track.getBoundingClientRect();
-        
-        // 썸이 트랙의 끝에 걸치지 않도록 위치 조정
-        const maxLeft = trackRect.width - thumbRect.width / 2;
-        const minLeft = thumbRect.width / 2;
-        let newLeft = (sliderPosition / 100) * trackRect.width;
-        newLeft = Math.max(minLeft, Math.min(newLeft, maxLeft));
-        
-        thumb.style.left = `${(newLeft / trackRect.width) * 100}%`;
-    }, 0);
-}
+            </div>`;
+    }
 
     function updateActiveButton(activeTag) {
         document.querySelectorAll('.review-tag-button').forEach(button => {
@@ -769,19 +647,184 @@ function renderTopProducts(topProducts, listId) {
         });
     }
 
-    function renderTopProducts(products, elementId) {
-        const listElement = document.getElementById(elementId);
-        listElement.innerHTML = ''; // 기존 리스트를 비움
+    function displayViewsAndPurchases(viewsData, purchasesData) {
+        // Age Group Chart
+        const ageGroupCtx = document.getElementById('ageGroupChart').getContext('2d');
+        new Chart(ageGroupCtx, {
+        type: 'bar',
+        data: {
+            labels: ['18세', '19-23세', '24-28세', '29-33세', '34-39세', '40세 이상'],
+            datasets: [
+                {
+                    label: '조회수',
+                    data: [
+                        viewsData.age_groups.views_18,
+                        viewsData.age_groups.views_19_23,
+                        viewsData.age_groups.views_24_28,
+                        viewsData.age_groups.views_29_33,
+                        viewsData.age_groups.views_34_39,
+                        viewsData.age_groups.views_40
+                    ],
+                    backgroundColor: 'rgba(253, 253, 150, 0.5)', // 파스텔 노란색
+                    borderColor: 'rgba(253, 253, 150, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: '구매수',
+                    data: [
+                        purchasesData.age_groups.purchases_18,
+                        purchasesData.age_groups.purchases_19_23,
+                        purchasesData.age_groups.purchases_24_28,
+                        purchasesData.age_groups.purchases_29_33,
+                        purchasesData.age_groups.purchases_34_39,
+                        purchasesData.age_groups.purchases_40
+                    ],
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 검정색
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: '조회수 선',
+                    data: [
+                        viewsData.age_groups.views_18,
+                        viewsData.age_groups.views_19_23,
+                        viewsData.age_groups.views_24_28,
+                        viewsData.age_groups.views_29_33,
+                        viewsData.age_groups.views_34_39,
+                        viewsData.age_groups.views_40
+                    ],
+                    type: 'line',
+                    fill: false,
+                    borderColor: 'rgba(253, 253, 150, 1)', // 노란색
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 0, // 원 없애기
+                    showLine: true,
+                },
+                {
+                    label: '구매수 선',
+                    data: [
+                        purchasesData.age_groups.purchases_18,
+                        purchasesData.age_groups.purchases_19_23,
+                        purchasesData.age_groups.purchases_24_28,
+                        purchasesData.age_groups.purchases_29_33,
+                        purchasesData.age_groups.purchases_34_39,
+                        purchasesData.age_groups.purchases_40
+                    ],
+                    type: 'line',
+                    fill: false,
+                    borderColor: 'rgba(0, 0, 0, 1)', // 검정색
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointRadius: 0, // 원 없애기
+                    showLine: true,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: false // 그리드 숨기기
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false // 그리드 숨기기
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        filter: function(item) {
+                            return item.text !== '조회수 선' && item.text !== '구매수 선';
+                        }
+                    }
+                }
+            }
+        }
+    });
 
-        products.forEach(product => {
-            const listItem = document.createElement('li');
-            listItem.textContent = product;
-            listElement.appendChild(listItem);
+    // Gender Distribution Chart
+        const genderCtx = document.getElementById('genderChart').getContext('2d');
+        const genderChart = new Chart(genderCtx, {
+            type: 'pie',
+            data: {
+                labels: ['남성', '여성'],
+                datasets: [{
+                    data: [viewsData.gender_views.male_ratio, viewsData.gender_views.female_ratio],
+                    backgroundColor: ['rgba(253, 253, 150, 0.5)', 'rgba(0, 0, 0, 0.5)']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                        }
+                    }
+                }
+            }
         });
+
+        document.getElementById('viewsGenderBtn').addEventListener('click', () => {
+            genderChart.data.datasets[0].data = [viewsData.gender_views.male_ratio, viewsData.gender_views.female_ratio];
+            genderChart.update();
+        });
+        document.getElementById('purchasesGenderBtn').addEventListener('click', () => {
+            genderChart.data.datasets[0].data = [purchasesData.gender_purchases.male_ratio, purchasesData.gender_purchases.female_ratio];
+            genderChart.update();
+        });
+
+        function updateTopProducts(data) {
+            const topProductsTable = document.getElementById('topProductsTable');
+            topProductsTable.innerHTML = data.top_products.map((product, index) => `
+                <tr>
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td>${product}</td>
+                </tr>
+            `).join('');
+        }
+
+        updateTopProducts(viewsData);
+
+        document.getElementById('viewsProductsBtn').addEventListener('click', () => updateTopProducts(viewsData));
+        document.getElementById('purchasesProductsBtn').addEventListener('click', () => updateTopProducts(purchasesData));
     }
 
-</script>
-</body>
-</html>
+    // 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('category');
+        categorySelect.value = "상의";
+        updateSubcategories();
+        updateCategoryIcon();  // 아이콘 업데이트
 
+        const subcategoryCheckboxes = document.querySelectorAll('#subcategory-checkboxes input[type="checkbox"]');
+        subcategoryCheckboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+
+        applyFilters();
+
+        // 리뷰태그 섹션 초기화
+        fetchPurchaseReviews('size');
+        
+        // 'size' 버튼에 'active' 클래스 추가
+        document.querySelector('.review-tag-button[onclick="fetchPurchaseReviews(\'size\')"]').classList.add('active');
+    });
+</script>
 {% endblock %}
