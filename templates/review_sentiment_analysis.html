@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}리뷰 감정분석{% endblock %}
+{% block title %}리뷰 감정 & 토픽 분석{% endblock %}
 
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -116,9 +116,9 @@
 
 <div class="flex flex-col min-h-screen">
     <div class="container mx-auto p-4">
-        <!-- 리뷰 감정분석 헤더 -->
+        <!-- 리뷰 감정 & 토픽분석 헤더 -->
         <section class="bg-black p-2 rounded-lg shadow-md mb-6" style="margin-top: -20px; width: 100%; margin-left: 0; right: 0; height: 40px; display: flex; align-items: center;">
-            <h2 class="font-bold text-lg text-white" style="margin-left: 15px;">브랜드 분석 > 리뷰 감정분석</h2>
+            <h2 class="font-bold text-lg text-white" style="margin-left: 15px;">브랜드 분석 > 리뷰 감정 & 토픽 분석</h2>
         </section>
 
         <!-- 기간 선택 및 필터 폼 -->
@@ -218,7 +218,7 @@
 
         <!-- 리뷰 긍/부정 비율 -->
         <section class="bg-white p-4 rounded-lg shadow-md mb-6">
-            <h2 class="font-bold text-sm text-gray-500 mb-4">리뷰 감정분석 긍정 및 부정 비율</h2>
+            <h2 class="font-bold text-sm text-gray-500 mb-4">리뷰 감정 & 토픽 분석 긍정 및 부정 비율</h2>
             <div class="flex space-x-4">
                 <!-- 무신사 스탠다드 파이차트 -->
                 <section class="bg-white p-4 rounded-lg shadow-md flex-1 relative" style="flex-basis: 40%;">
@@ -249,7 +249,7 @@
         <!-- 긍부정 상위 리뷰 -->
         <section class="bg-white p-4 rounded-lg shadow-md mb-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="font-bold text-sm text-gray-500">리뷰 감정분석 감정별 후기 랭킹</h2>
+                <h2 class="font-bold text-sm text-gray-500">리뷰 감정 & 토픽 분석 감정별 후기 랭킹</h2>
                 <div class="space-x-2">
                     <button onclick="setEmotions('positive')" class="bg-black text-xs text-white font-semibold py-1 px-2 rounded-full" style="opacity: 0.5;">
                         긍정

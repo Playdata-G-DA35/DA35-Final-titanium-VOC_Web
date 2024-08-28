@@ -256,6 +256,8 @@
     document.getElementById('periodForm').onsubmit = function(event) {
         event.preventDefault();
         fetchData();
+        fetchWordclouds();
+        fetchWordFrequency();
     };
     
     function getCookie(name) {
@@ -343,36 +345,68 @@
                 }
             },
             scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'day',
-                        displayFormats: {
-                            day: 'MM/dd' // 날짜 형식
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            displayFormats: {
+                                day: 'MM/dd' // 날짜 형식
+                            }
+                        },
+                        grid: {
+                            display: false // X축 그리드 제거
+                        },
+                        title: {
+                            display: false, // X축 제목 숨김
+                            text: '날짜'
                         }
                     },
-                    grid: {
-                        display: false // X축 그리드 제거
-                    },
-                    title: {
-                        display: false, // X축 제목 숨김
-                        text: '날짜'
+                    y: {
+                        grid: {
+                            display: false // Y축 그리드 제거
+                        },
+                        title: {
+                            display: false, // Y축 제목 숨김
+                            text: '리뷰 수'
+                        },
+                        beginAtZero: true
                     }
                 },
-                y: {
-                    grid: {
-                        display: false // Y축 그리드 제거
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            color: '#333',
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
-                    title: {
-                        display: false, // Y축 제목 숨김
-                        text: '리뷰 수'
-                    },
-                    beginAtZero: true
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed.y;
+
+                                const date = new Date(context.label);
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                label += ` (Date: ${month}/${day})`;
+                                return label;
+                            }
+                        }
+                    }
                 }
             }
-        }
-    });
-}
+        });
+    }
     
     
     let musinsaPieChartInstance; // 전역 변수로 선언
